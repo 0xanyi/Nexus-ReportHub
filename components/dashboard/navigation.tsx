@@ -48,8 +48,20 @@ export function DashboardNavigation({
           </p>
           <div className="mt-3 space-y-1">
             {section.items.map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(`${item.href}/`)
+              const isActive = (() => {
+                // Exact match
+                if (pathname === item.href) return true
+
+                // For nested routes, only highlight if it's a direct child
+                if (pathname.startsWith(`${item.href}/`)) {
+                  // Don't highlight parent if we're on a deeper nested route
+                  const pathnameParts = pathname.split('/').filter(Boolean)
+                  const hrefParts = item.href.split('/').filter(Boolean)
+                  return pathnameParts.length === hrefParts.length + 1
+                }
+
+                return false
+              })()
 
               return (
                 <Link
@@ -64,7 +76,7 @@ export function DashboardNavigation({
                     "group flex flex-col gap-0.5 rounded-xl px-3 py-2 transition-all",
                     "hover:bg-slate-800/60",
                     isActive
-                      ? "bg-slate-800/80 text-white shadow-inner outline outline-1 outline-slate-700"
+                      ? "bg-blue-600/60 text-white shadow-inner outline outline-1 outline-blue-500/50"
                       : "text-slate-300 hover:text-slate-100"
                   )}
                 >

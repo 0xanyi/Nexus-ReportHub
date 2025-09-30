@@ -5,13 +5,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { formatCurrency } from "@/lib/utils"
 import { AnalyticsCharts } from "@/components/analytics/AnalyticsCharts"
 import { TrendAnalysis } from "@/components/analytics/TrendAnalysis"
+import { DateRangeSelector, type ComparisonMode, type DateRange } from "@/components/ui/date-range-selector"
+import { AnalyticsControls } from "@/components/analytics/AnalyticsControls"
 
-export default async function AnalyticsPage() {
+export default async function AnalyticsPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}) {
   const session = await auth()
 
   if (!session?.user) {
     redirect("/login")
   }
+
+  // Parse comparison mode and date range from search params
+  const comparisonMode = (searchParams.mode as ComparisonMode) || "year-over-year"
+  const fromDate = searchParams.from as string
+  const toDate = searchParams.to as string
 
   // Get all transactions with related data
   const transactions = await prisma.transaction.findMany({
@@ -46,38 +57,110 @@ export default async function AnalyticsPage() {
     },
   })
 
-  // Calculate year-over-year data
+  // Calculate comparison data based on selected mode
   const currentYear = new Date().getFullYear()
-  const lastYear = currentYear - 1
+  const currentMonth = new Date().getMonth()
 
-  const currentYearTransactions = transactions.filter(
-    (t) => new Date(t.transactionDate).getFullYear() === currentYear
-  )
-  const lastYearTransactions = transactions.filter(
-    (t) => new Date(t.transactionDate).getFullYear() === lastYear
-  )
+  function getComparisonData(mode: ComparisonMode, from?: string, to?: string) {
+    switch (mode) {
+      case "year-over-year":
+        const lastYear = currentYear - 1
+        return {
+          currentPeriod: { year: currentYear, label: currentYear.toString() },
+          comparePeriod: { year: lastYear, label: lastYear.toString() },
+          currentTransactions: transactions.filter(
+            (t) => new Date(t.transactionDate).getFullYear() === currentYear
+          ),
+          compareTransactions: transactions.filter(
+            (t) => new Date(t.transactionDate).getFullYear() === lastYear
+          ),
+          currentPayments: payments.filter(
+            (p) => new Date(p.paymentDate).getFullYear() === currentYear
+          ),
+          comparePayments: payments.filter(
+            (p) => new Date(p.paymentDate).getFullYear() === lastYear
+          ),
+        }
 
-  const currentYearPayments = payments.filter(
-    (p) => new Date(p.paymentDate).getFullYear() === currentYear
-  )
-  const lastYearPayments = payments.filter(
-    (p) => new Date(p.paymentDate).getFullYear() === lastYear
-  )
+      case "month-to-month":
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear
+
+        return {
+          currentPeriod: { month: currentMonth, year: currentYear, label: new Date(currentYear, currentMonth).toLocaleString("default", { month: "long", year: "numeric" }) },
+          comparePeriod: { month: lastMonth, year: lastMonthYear, label: new Date(lastMonthYear, lastMonth).toLocaleString("default", { month: "long", year: "numeric" }) },
+          currentTransactions: transactions.filter(
+            (t) => new Date(t.transactionDate).getMonth() === currentMonth &&
+                   new Date(t.transactionDate).getFullYear() === currentYear
+          ),
+          compareTransactions: transactions.filter(
+            (t) => new Date(t.transactionDate).getMonth() === lastMonth &&
+                   new Date(t.transactionDate).getFullYear() === lastMonthYear
+          ),
+          currentPayments: payments.filter(
+            (p) => new Date(p.paymentDate).getMonth() === currentMonth &&
+                   new Date(p.paymentDate).getFullYear() === currentYear
+          ),
+          comparePayments: payments.filter(
+            (p) => new Date(p.paymentDate).getMonth() === lastMonth &&
+                   new Date(p.paymentDate).getFullYear() === lastMonthYear
+          ),
+        }
+
+      case "custom":
+        if (!from || !to) {
+          // Fallback to year-over-year if no dates provided
+          return getComparisonData("year-over-year")
+        }
+
+        const fromDateObj = new Date(from)
+        const toDateObj = new Date(to)
+
+        return {
+          currentPeriod: { from: from, to: to, label: `${from} to ${to}` },
+          comparePeriod: { from: from, to: to, label: `${from} to ${to}` },
+          currentTransactions: transactions.filter((t) => {
+            const tDate = new Date(t.transactionDate)
+            return tDate >= fromDateObj && tDate <= toDateObj
+          }),
+          compareTransactions: [], // No comparison for custom ranges
+          currentPayments: payments.filter((p) => {
+            const pDate = new Date(p.paymentDate)
+            return pDate >= fromDateObj && pDate <= toDateObj
+          }),
+          comparePayments: [], // No comparison for custom ranges
+        }
+
+      default:
+        return getComparisonData("year-over-year")
+    }
+  }
+
+  const comparisonData = getComparisonData(comparisonMode, fromDate, toDate)
+
+  const {
+    currentTransactions,
+    compareTransactions,
+    currentPayments,
+    comparePayments,
+    currentPeriod,
+    comparePeriod,
+  } = comparisonData
 
   // Calculate totals
-  const currentYearPurchases = currentYearTransactions.reduce((sum, t) => {
+  const currentYearPurchases = currentTransactions.reduce((sum, t) => {
     return sum + t.lineItems.reduce((lineSum, item) => lineSum + Number(item.totalAmount), 0)
   }, 0)
 
-  const lastYearPurchases = lastYearTransactions.reduce((sum, t) => {
+  const lastYearPurchases = compareTransactions.reduce((sum, t) => {
     return sum + t.lineItems.reduce((lineSum, item) => lineSum + Number(item.totalAmount), 0)
   }, 0)
 
-  const currentYearPaymentsTotal = currentYearPayments.reduce(
+  const currentYearPaymentsTotal = currentPayments.reduce(
     (sum, p) => sum + Number(p.amount),
     0
   )
-  const lastYearPaymentsTotal = lastYearPayments.reduce((sum, p) => sum + Number(p.amount), 0)
+  const lastYearPaymentsTotal = comparePayments.reduce((sum, p) => sum + Number(p.amount), 0)
 
   // Calculate collection rates
   const currentCollectionRate =
@@ -95,15 +178,15 @@ export default async function AnalyticsPage() {
       ? ((currentYearPaymentsTotal - lastYearPaymentsTotal) / lastYearPaymentsTotal) * 100
       : 0
 
-  // Group data by month for current and last year
+  // Group data by month for current and comparison periods
   const monthlyData = Array.from({ length: 12 }, (_, i) => {
     const month = new Date(currentYear, i, 1).toLocaleString("default", { month: "short" })
 
-    // Current year
-    const currentMonthTransactions = currentYearTransactions.filter(
+    // Current period
+    const currentMonthTransactions = currentTransactions.filter(
       (t) => new Date(t.transactionDate).getMonth() === i
     )
-    const currentMonthPayments = currentYearPayments.filter(
+    const currentMonthPayments = currentPayments.filter(
       (p) => new Date(p.paymentDate).getMonth() === i
     )
 
@@ -116,11 +199,11 @@ export default async function AnalyticsPage() {
       0
     )
 
-    // Last year
-    const lastMonthTransactions = lastYearTransactions.filter(
+    // Comparison period
+    const lastMonthTransactions = compareTransactions.filter(
       (t) => new Date(t.transactionDate).getMonth() === i
     )
-    const lastMonthPayments = lastYearPayments.filter(
+    const lastMonthPayments = comparePayments.filter(
       (p) => new Date(p.paymentDate).getMonth() === i
     )
 
@@ -223,41 +306,52 @@ export default async function AnalyticsPage() {
         </p>
       </div>
 
+      {/* Controls for date range selection */}
+      <AnalyticsControls />
+
       {/* Year-over-Year Summary */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{currentYear} Purchases</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {typeof currentPeriod.label === 'string' ? currentPeriod.label : `${currentPeriod.from} to ${currentPeriod.to}`} Purchases
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatCurrency(currentYearPurchases, "GBP")}
             </div>
-            <p
-              className={`text-xs ${
-                purchaseGrowth >= 0 ? "text-green-600" : "text-destructive"
-              }`}
-            >
-              {purchaseGrowth >= 0 ? "+" : ""}
-              {purchaseGrowth.toFixed(1)}% vs {lastYear}
-            </p>
+            {compareTransactions.length > 0 && (
+              <p
+                className={`text-xs ${
+                  purchaseGrowth >= 0 ? "text-green-600" : "text-destructive"
+                }`}
+              >
+                {purchaseGrowth >= 0 ? "+" : ""}
+                {purchaseGrowth.toFixed(1)}% vs {comparePeriod.label}
+              </p>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{currentYear} Payments</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {typeof currentPeriod.label === 'string' ? currentPeriod.label : `${currentPeriod.from} to ${currentPeriod.to}`} Payments
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatCurrency(currentYearPaymentsTotal, "GBP")}
             </div>
-            <p
-              className={`text-xs ${paymentGrowth >= 0 ? "text-green-600" : "text-destructive"}`}
-            >
-              {paymentGrowth >= 0 ? "+" : ""}
-              {paymentGrowth.toFixed(1)}% vs {lastYear}
-            </p>
+            {comparePayments.length > 0 && (
+              <p
+                className={`text-xs ${paymentGrowth >= 0 ? "text-green-600" : "text-destructive"}`}
+              >
+                {paymentGrowth >= 0 ? "+" : ""}
+                {paymentGrowth.toFixed(1)}% vs {comparePeriod.label}
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -267,14 +361,16 @@ export default async function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{currentCollectionRate.toFixed(1)}%</div>
-            <p
-              className={`text-xs ${
-                currentCollectionRate >= lastCollectionRate ? "text-green-600" : "text-destructive"
-              }`}
-            >
-              {currentCollectionRate >= lastCollectionRate ? "+" : ""}
-              {(currentCollectionRate - lastCollectionRate).toFixed(1)}% vs {lastYear}
-            </p>
+            {compareTransactions.length > 0 && comparePayments.length > 0 && (
+              <p
+                className={`text-xs ${
+                  currentCollectionRate >= lastCollectionRate ? "text-green-600" : "text-destructive"
+                }`}
+              >
+                {currentCollectionRate >= lastCollectionRate ? "+" : ""}
+                {(currentCollectionRate - lastCollectionRate).toFixed(1)}% vs {comparePeriod.label}
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -298,7 +394,7 @@ export default async function AnalyticsPage() {
       <TrendAnalysis
         churchPerformance={churchPerformance}
         currentYear={currentYear}
-        lastYear={lastYear}
+        lastYear={comparePeriod.year || currentYear - 1}
       />
     </div>
   )
