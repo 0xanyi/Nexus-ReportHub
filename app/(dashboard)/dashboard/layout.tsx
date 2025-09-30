@@ -60,6 +60,14 @@ export default async function DashboardLayout({
               </li>
               <li>
                 <Link
+                  href="/dashboard/analytics"
+                  className="block py-3 border-b-2 border-transparent hover:border-primary transition-colors"
+                >
+                  Analytics
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/dashboard/churches"
                   className="block py-3 border-b-2 border-transparent hover:border-primary transition-colors"
                 >
@@ -92,6 +100,16 @@ export default async function DashboardLayout({
                       Upload CSV
                     </Link>
                   </li>
+                  {session.user.role === "SUPER_ADMIN" && (
+                    <li>
+                      <Link
+                        href="/dashboard/users"
+                        className="block py-3 border-b-2 border-transparent hover:border-primary transition-colors"
+                      >
+                        Users
+                      </Link>
+                    </li>
+                  )}
                 </>
               )}
             </ul>
