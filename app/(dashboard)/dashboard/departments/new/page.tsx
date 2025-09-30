@@ -39,7 +39,7 @@ export default function NewDepartmentPage() {
         router.push("/dashboard/departments")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while creating the department")
       setIsLoading(false)
     }

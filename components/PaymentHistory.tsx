@@ -5,11 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import { Decimal } from "@prisma/client/runtime/library"
 
 interface Payment {
   id: string
   paymentDate: Date
-  amount: any
+  amount: number | string | Decimal
   currency: string
   paymentMethod: string
   forPurpose: string

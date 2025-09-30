@@ -116,7 +116,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     if (name !== undefined) updateData.name = name
     if (role !== undefined) updateData.role = role
     if (zoneId !== undefined) updateData.zoneId = zoneId

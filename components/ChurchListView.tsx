@@ -35,7 +35,7 @@ type SortField = "name" | "group" | "transactions" | "purchases" | "payments" | 
 type SortOrder = "asc" | "desc"
 type ViewMode = "grid" | "table"
 
-export function ChurchListView({ churches, isAdmin }: ChurchListViewProps) {
+export function ChurchListView({ churches }: ChurchListViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<SortField>("name")
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc")
@@ -50,7 +50,7 @@ export function ChurchListView({ churches, isAdmin }: ChurchListViewProps) {
 
   // Filter and sort churches
   const filteredChurches = useMemo(() => {
-    let filtered = churches.filter((church) => {
+    const filtered = churches.filter((church) => {
       const matchesSearch =
         church.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         church.group.name.toLowerCase().includes(searchQuery.toLowerCase())

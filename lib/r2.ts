@@ -74,12 +74,12 @@ export async function downloadFromR2(key: string): Promise<Buffer> {
   })
 
   const response = await r2Client.send(command)
-  const chunks: Uint8Array[] = []
+  const chunks: Buffer[] = []
 
   if (response.Body) {
-    const stream = response.Body as any
+    const stream = response.Body as NodeJS.ReadableStream
     for await (const chunk of stream) {
-      chunks.push(chunk)
+      chunks.push(Buffer.from(chunk))
     }
   }
 

@@ -38,12 +38,22 @@ export default function NewUserPage() {
   const [departments, setDepartments] = useState<Department[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string
+    email: string
+    password: string
+    confirmPassword: string
+    role: "CHURCH_USER" | "GROUP_ADMIN" | "ZONE_ADMIN" | "SUPER_ADMIN"
+    zoneId: string
+    groupId: string
+    churchId: string
+    departmentId: string
+  }>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "CHURCH_USER" as const,
+    role: "CHURCH_USER",
     zoneId: "",
     groupId: "",
     churchId: "",
@@ -127,7 +137,7 @@ export default function NewUserPage() {
         router.push("/dashboard/users")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while creating the user")
       setIsLoading(false)
     }
@@ -166,7 +176,7 @@ export default function NewUserPage() {
         <Card>
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
-            <CardDescription>User's personal details and login credentials</CardDescription>
+            <CardDescription>User&rsquo;s personal details and login credentials</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -230,7 +240,7 @@ export default function NewUserPage() {
         <Card>
           <CardHeader>
             <CardTitle>Role Assignment</CardTitle>
-            <CardDescription>Define user's access level and permissions</CardDescription>
+            <CardDescription>Define user&rsquo;s access level and permissions</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -238,7 +248,7 @@ export default function NewUserPage() {
               <select
                 id="role"
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as "CHURCH_USER" | "GROUP_ADMIN" | "ZONE_ADMIN" | "SUPER_ADMIN" })}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 required
               >
@@ -336,7 +346,7 @@ export default function NewUserPage() {
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800">
                 <strong>Note:</strong> Assignments are optional and can be used to filter data and
-                restrict access based on the user's role.
+                restrict access based on the user&rsquo;s role.
               </p>
             </div>
           </CardContent>

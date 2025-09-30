@@ -99,7 +99,7 @@ export default function UploadPage() {
           router.refresh()
         }, 2000)
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred during upload. Please try again.")
       setIsUploading(false)
     }
@@ -269,7 +269,7 @@ export default function UploadPage() {
                 <span className="font-semibold">Date:</span> Format: YYYY-MM-DD or DD/MM/YYYY
               </div>
               <div>
-                <span className="font-semibold">Product Type:</span> Must match existing product names (e.g., "ROR English", "Teevo")
+                <span className="font-semibold">Product Type:</span> Must match existing product names (e.g., &ldquo;ROR English&rdquo;, &ldquo;Teevo&rdquo;)
               </div>
               <div>
                 <span className="font-semibold">Quantity:</span> Number of copies ordered

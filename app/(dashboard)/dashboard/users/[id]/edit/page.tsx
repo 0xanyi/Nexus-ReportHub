@@ -51,9 +51,18 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
   const [departments, setDepartments] = useState<Department[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string
+    role: "CHURCH_USER" | "GROUP_ADMIN" | "ZONE_ADMIN" | "SUPER_ADMIN"
+    zoneId: string
+    groupId: string
+    churchId: string
+    departmentId: string
+    password: string
+    confirmPassword: string
+  }>({
     name: "",
-    role: "CHURCH_USER" as const,
+    role: "CHURCH_USER",
     zoneId: "",
     groupId: "",
     churchId: "",
@@ -140,7 +149,15 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
     setIsLoading(true)
 
     try {
-      const updateData: any = {
+      const updateData: {
+        name: string
+        role: string
+        zoneId: string | null
+        groupId: string | null
+        churchId: string | null
+        departmentId: string | null
+        password?: string
+      } = {
         name: formData.name,
         role: formData.role,
         zoneId: formData.zoneId || null,
@@ -169,7 +186,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
         router.push("/dashboard/users")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while updating the user")
       setIsLoading(false)
     }
@@ -273,7 +290,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
         <Card>
           <CardHeader>
             <CardTitle>Role Assignment</CardTitle>
-            <CardDescription>Define user's access level and permissions</CardDescription>
+            <CardDescription>Define user&rsquo;s access level and permissions</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -281,7 +298,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
               <select
                 id="role"
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as "CHURCH_USER" | "GROUP_ADMIN" | "ZONE_ADMIN" | "SUPER_ADMIN" })}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 required
               >

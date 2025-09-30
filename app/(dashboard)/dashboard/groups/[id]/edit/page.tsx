@@ -62,7 +62,7 @@ export default function EditGroupPage({ params }: { params: Promise<{ id: string
         router.push("/dashboard/groups")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while updating the group")
       setIsLoading(false)
     }
@@ -90,7 +90,7 @@ export default function EditGroupPage({ params }: { params: Promise<{ id: string
         router.push("/dashboard/groups")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while deleting the group")
       setIsDeleting(false)
     }

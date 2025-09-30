@@ -55,7 +55,7 @@ export default function EditChurchPage({ params }: { params: Promise<{ id: strin
             groupId: data.group.id,
           })
         })
-        .catch((err) => console.error("Failed to load church:", err))
+        .catch(() => console.error("Failed to load church:"))
 
       // Load groups
       fetch("/api/groups")
@@ -88,7 +88,7 @@ export default function EditChurchPage({ params }: { params: Promise<{ id: strin
         router.push(`/dashboard/churches/${id}`)
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while updating the church")
       setIsLoading(false)
     }
@@ -116,7 +116,7 @@ export default function EditChurchPage({ params }: { params: Promise<{ id: strin
         router.push("/dashboard/churches")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while deleting the church")
       setIsDeleting(false)
     }

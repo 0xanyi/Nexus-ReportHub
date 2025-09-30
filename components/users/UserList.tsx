@@ -84,7 +84,7 @@ export function UserList({ users, currentUserId }: UserListProps) {
       } else {
         router.refresh()
       }
-    } catch (error) {
+    } catch {
       alert("An error occurred while deleting the user")
       setIsDeleting(null)
     }

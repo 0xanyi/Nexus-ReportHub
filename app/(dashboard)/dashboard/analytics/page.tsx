@@ -1,17 +1,17 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 import { AnalyticsCharts } from "@/components/analytics/AnalyticsCharts"
 import { TrendAnalysis } from "@/components/analytics/TrendAnalysis"
-import { DateRangeSelector, type ComparisonMode, type DateRange } from "@/components/ui/date-range-selector"
-import { AnalyticsControls } from "@/components/analytics/AnalyticsControls"
+// import { AnalyticsControls } from "@/components/analytics/AnalyticsControls"
+import { type ComparisonMode } from "@/components/ui/date-range-selector"
 
 export default async function AnalyticsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const session = await auth()
 
@@ -20,9 +20,10 @@ export default async function AnalyticsPage({
   }
 
   // Parse comparison mode and date range from search params
-  const comparisonMode = (searchParams.mode as ComparisonMode) || "year-over-year"
-  const fromDate = searchParams.from as string
-  const toDate = searchParams.to as string
+  const resolvedSearchParams = await searchParams
+  const comparisonMode = (resolvedSearchParams.mode as ComparisonMode) || "year-over-year"
+  const fromDate = resolvedSearchParams.from as string
+  const toDate = resolvedSearchParams.to as string
 
   // Get all transactions with related data
   const transactions = await prisma.transaction.findMany({
@@ -307,7 +308,7 @@ export default async function AnalyticsPage({
       </div>
 
       {/* Controls for date range selection */}
-      <AnalyticsControls />
+      {/* <AnalyticsControls /> */}
 
       {/* Year-over-Year Summary */}
       <div className="grid gap-4 md:grid-cols-4">
