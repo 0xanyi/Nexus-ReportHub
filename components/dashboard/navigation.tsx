@@ -85,10 +85,10 @@ export function DashboardNavigation({
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100">
-      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-slate-800/70 lg:bg-slate-900/60 lg:px-4 lg:py-6 lg:backdrop-blur">
+      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-blue-950/40 lg:bg-blue-950 lg:px-4 lg:py-6 lg:shadow-xl lg:shadow-blue-900/30">
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-emerald-400/10 to-emerald-500/20 px-4 py-3 text-left font-semibold text-emerald-200"
+          className="flex items-center gap-2 rounded-2xl bg-blue-900/70 px-4 py-3 text-left font-semibold text-white shadow-lg shadow-blue-900/40"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/20 text-2xl">
             NR
@@ -99,15 +99,15 @@ export function DashboardNavigation({
           </span>
         </Link>
         <div className="mt-10 flex-1 overflow-y-auto pr-1">{navContent()}</div>
-        <div className="mt-6 rounded-2xl border border-slate-800/60 bg-slate-900/70 p-4">
-          <div className="text-sm text-slate-300">
-            <p className="font-semibold text-slate-100">{user.name ?? "Team Member"}</p>
-            <p className="capitalize text-slate-400">{roleLabel}</p>
+        <div className="mt-6 rounded-2xl border border-blue-800/60 bg-blue-900/80 p-4">
+          <div className="text-sm text-blue-100">
+            <p className="font-semibold text-white">{user.name ?? "Team Member"}</p>
+            <p className="capitalize text-blue-100/70">{roleLabel}</p>
           </div>
           <form action={signOutAction} className="mt-4">
             <button
               type="submit"
-              className="w-full rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700"
+              className="w-full rounded-xl bg-blue-800 px-4 py-2 text-sm font-medium text-blue-50 transition hover:bg-blue-700"
             >
               Sign out
             </button>
@@ -174,12 +174,12 @@ export function DashboardNavigation({
             className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-800/70 bg-slate-900/95 px-4 py-6 backdrop-blur">
+          <div className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-blue-900/60 bg-blue-950/95 px-4 py-6">
             <div className="flex items-center justify-between">
               <Link
                 href="/dashboard"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-emerald-400/10 to-emerald-500/20 px-4 py-2 text-left text-sm font-semibold text-emerald-200"
+                className="flex items-center gap-2 rounded-2xl bg-blue-900/70 px-4 py-2 text-left text-sm font-semibold text-white"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/20 text-lg">
                   NR
@@ -193,7 +193,7 @@ export function DashboardNavigation({
               </Link>
               <button
                 type="button"
-                className="rounded-xl border border-slate-700/70 bg-slate-800/80 p-2 text-slate-200 transition hover:bg-slate-700"
+                className="rounded-xl border border-blue-900/60 bg-blue-900/80 p-2 text-blue-100 transition hover:bg-blue-800"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Close navigation"
               >
@@ -214,17 +214,17 @@ export function DashboardNavigation({
             <div className="mt-8 flex-1 overflow-y-auto pr-1">
               {navContent(() => setMobileOpen(false))}
             </div>
-            <div className="mt-6 rounded-2xl border border-slate-800/70 bg-slate-900/80 p-4">
-              <div className="text-sm text-slate-300">
-                <p className="font-semibold text-slate-100">
+            <div className="mt-6 rounded-2xl border border-blue-900/60 bg-blue-900/85 p-4">
+              <div className="text-sm text-blue-100">
+                <p className="font-semibold text-white">
                   {user.name ?? "Team Member"}
                 </p>
-                <p className="capitalize text-slate-400">{roleLabel}</p>
+                <p className="capitalize text-blue-100/70">{roleLabel}</p>
               </div>
               <form action={signOutAction} className="mt-4">
                 <button
                   type="submit"
-                  className="w-full rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700"
+                  className="w-full rounded-xl bg-blue-800 px-4 py-2 text-sm font-medium text-blue-50 transition hover:bg-blue-700"
                 >
                   Sign out
                 </button>
