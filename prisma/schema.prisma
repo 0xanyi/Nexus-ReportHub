@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ZONE_ADMIN
+  GROUP_ADMIN
+  CHURCH_USER
+}
+
+enum TransactionType {
+  PURCHASE
+  PAYMENT
+  SPONSORSHIP
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH
+  ESPEES
+}
+
+enum PaymentPurpose {
+  PRINTING
+  SPONSORSHIP
+}
+
+enum UploadStatus {
+  SUCCESS
+  PARTIAL
+  FAILED
+  PROCESSING
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  role          UserRole  @default(CHURCH_USER)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  zoneId String?
+  zone   Zone?   @relation(fields: [zoneId], references: [id])
+
+  groupId String?
+  group   Group?  @relation(fields: [groupId], references: [id])
+
+  churchId String?
+  church   Church? @relation(fields: [churchId], references: [id])
+
+  uploadedFiles UploadHistory[]
+  transactions  Transaction[]
+  payments      Payment[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Zone {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  currency  String   @default("GBP")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  groups Group[]
+  users  User[]
+
+  @@index([name])
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  zoneId String
+  zone   Zone   @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  churches Church[]
+  users    User[]
+
+  @@unique([zoneId, name])
+  @@index([zoneId])
+}
+
+model Church {
+  id           String   @id @default(cuid())
+  name         String
+  contactEmail String?
+  contactPhone String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  transactions Transaction[]
+  payments     Payment[]
+  users        User[]
+
+  @@unique([groupId, name])
+  @@index([groupId])
+  @@index([name])
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  productTypes ProductType[]
+  transactions Transaction[]
+  payments     Payment[]
+  users        User[]
+
+  @@index([name])
+}
+
+model ProductType {
+  id        String   @id @default(cuid())
+  name      String
+  unitPrice Decimal  @db.Decimal(10, 2)
+  currency  String   @default("GBP")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  lineItems TransactionLineItem[]
+
+  @@unique([departmentId, name])
+  @@index([departmentId])
+}
+
+model Transaction {
+  id              String          @id @default(cuid())
+  transactionDate DateTime
+  transactionType TransactionType
+  currency        String          @default("GBP")
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  churchId String
+  church   Church @relation(fields: [churchId], references: [id], onDelete: Cascade)
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  uploadedBy String
+  uploader   User   @relation(fields: [uploadedBy], references: [id])
+
+  lineItems TransactionLineItem[]
+
+  @@index([churchId])
+  @@index([departmentId])
+  @@index([transactionDate])
+  @@index([uploadedBy])
+}
+
+model TransactionLineItem {
+  id          String  @id @default(cuid())
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(10, 2)
+  totalAmount Decimal @db.Decimal(10, 2)
+
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  productTypeId String
+  productType   ProductType @relation(fields: [productTypeId], references: [id])
+
+  @@index([transactionId])
+  @@index([productTypeId])
+}
+
+model Payment {
+  id              String         @id @default(cuid())
+  paymentDate     DateTime
+  amount          Decimal        @db.Decimal(10, 2)
+  currency        String         @default("GBP")
+  paymentMethod   PaymentMethod
+  referenceNumber String?
+  forPurpose      PaymentPurpose
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  churchId String
+  church   Church @relation(fields: [churchId], references: [id], onDelete: Cascade)
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  uploadedBy String
+  uploader   User   @relation(fields: [uploadedBy], references: [id])
+
+  @@index([churchId])
+  @@index([departmentId])
+  @@index([paymentDate])
+  @@index([uploadedBy])
+}
+
+model UploadHistory {
+  id               String       @id @default(cuid())
+  fileName         String
+  fileUrl          String?
+  recordsProcessed Int          @default(0)
+  status           UploadStatus @default(PROCESSING)
+  errorLog         String?      @db.Text
+  uploadedAt       DateTime     @default(now())
+
+  uploadedBy String
+  uploader   User   @relation(fields: [uploadedBy], references: [id])
+
+  @@index([uploadedBy])
+  @@index([uploadedAt])
+  @@index([status])
+}
