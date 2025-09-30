@@ -4,23 +4,50 @@ A comprehensive church financial and inventory management system for Rhapsody of
 
 ## Features
 
+### Core Functionality
+
 - 🔐 **Secure Authentication** - NextAuth.js v5 with role-based access control
-- 📊 **Hierarchical Structure** - Zone → Group → Church organization
-- 📤 **CSV Upload & Processing** - Bulk import of transactions and payments
-- 📈 **Advanced Reporting** - Monthly/annual summaries, balance calculations
+- 📊 **Hierarchical Management** - Full CRUD for Zones, Groups, and Churches
+- 🏛️ **Church Transfer** - Move churches between groups while preserving history
+- 📦 **Product Management** - Multi-edition Rhapsody support (English, French, German, Polish, etc.)
+- 📤 **CSV Upload & Processing** - Drag-and-drop bulk import with smart validation
+- 📈 **Visual Analytics** - Interactive charts with Recharts (bar, line, pie)
+- 📊 **Advanced Reporting** - Monthly/annual summaries, balance calculations
+- 📄 **Export Capabilities** - Download reports as PDF or Excel
 - 💰 **Multi-Currency Support** - GBP, USD, EUR, NGN, and Espees
-- ☁️ **Cloud Storage** - Cloudflare R2 integration for file management
-- 🔒 **Row-Level Security** - Users only see data relevant to their role
-- 🎨 **Modern UI** - Built with Next.js 15, React 19, and Tailwind CSS
+- 🔍 **Audit Trails** - Complete upload history and transaction tracking
+- 🎨 **Modern UI** - Built with Next.js 15, React 19, shadcn/ui, and Tailwind CSS
+
+### Admin Features
+
+- ✅ Create, edit, delete groups and churches
+- ✅ Move churches between groups
+- ✅ Manage product types and pricing
+- ✅ Bulk CSV imports with error handling
+- ✅ View comprehensive financial reports
+- ✅ Export church/group reports (PDF/Excel)
+- ✅ Track upload history with detailed logs
+
+### User Features
+
+- ✅ View financial dashboards with charts
+- ✅ Browse churches and transaction histories
+- ✅ Export individual church reports
+- ✅ Track purchases, payments, and balances
+- ✅ View product breakdowns and monthly summaries
 
 ## Tech Stack
 
-- **Framework**: Next.js 15.5.3 (App Router) with TypeScript
-- **Database**: PostgreSQL with Prisma ORM
+- **Framework**: Next.js 15.5.4 (App Router) with TypeScript
+- **Database**: PostgreSQL with Prisma ORM v6
 - **Authentication**: NextAuth.js v5
-- **Storage**: Cloudflare R2
-- **UI**: Tailwind CSS + shadcn/ui components
-- **Hosting**: Vercel
+- **Charts**: Recharts for data visualization
+- **CSV Processing**: Papa Parse
+- **PDF Export**: jsPDF with autoTable
+- **Excel Export**: SheetJS (xlsx)
+- **UI**: Tailwind CSS v3 + shadcn/ui components
+- **Storage**: Cloudflare R2 (optional)
+- **Hosting**: Vercel-ready
 
 ## Prerequisites
 
@@ -110,23 +137,38 @@ After seeding, you can login with:
 ├── app/
 │   ├── (auth)/              # Authentication pages (login, register)
 │   ├── (dashboard)/         # Protected dashboard pages
-│   ├── api/                 # API routes
+│   │   ├── dashboard/       # Main dashboard
+│   │   ├── reports/         # Financial reports with charts
+│   │   ├── churches/        # Church management and details
+│   │   ├── groups/          # Group management (admin only)
+│   │   ├── products/        # Product management (admin only)
+│   │   └── upload/          # CSV upload system (admin only)
+│   ├── api/                 # API routes (RESTful endpoints)
+│   │   ├── auth/            # Authentication endpoints
+│   │   ├── churches/        # Church CRUD operations
+│   │   ├── groups/          # Group CRUD operations
+│   │   ├── products/        # Product CRUD operations
+│   │   ├── upload/          # CSV upload processing
+│   │   ├── zones/           # Zone listing
+│   │   └── template/        # CSV template download
 │   ├── globals.css          # Global styles
 │   ├── layout.tsx           # Root layout
 │   └── page.tsx             # Landing page
 ├── components/
-│   └── ui/                  # Reusable UI components
+│   ├── charts/              # Chart components (Recharts)
+│   ├── ui/                  # shadcn/ui components
+│   └── ExportButtons.tsx    # PDF/Excel export buttons
 ├── lib/
-│   ├── prisma.ts            # Prisma client
+│   ├── prisma.ts            # Prisma client singleton
+│   ├── exports.ts           # PDF/Excel export utilities
 │   ├── r2.ts                # Cloudflare R2 utilities
 │   └── utils.ts             # Helper functions
 ├── prisma/
-│   ├── schema.prisma        # Database schema
-│   └── seed.ts              # Seed script
+│   ├── schema.prisma        # Database schema (10 models)
+│   └── seed.ts              # Database seeding script
 ├── auth.config.ts           # NextAuth configuration
 ├── auth.ts                  # NextAuth instance
-└── middleware.ts            # Route protection
-
+└── middleware.ts            # Route protection middleware
 ```
 
 ## Database Schema
@@ -188,16 +230,97 @@ Vercel will automatically:
 - ✅ Database encryption at rest
 - ✅ Audit logging for all uploads
 
+## Deployment to Production
+
+### Prerequisites
+
+1. **Database**: Set up a production PostgreSQL database (e.g., Neon, Supabase, Railway)
+2. **Vercel Account**: Create an account at [vercel.com](https://vercel.com)
+3. **Environment Variables**: Prepare your production environment variables
+
+### Step 1: Prepare Database
+
+```bash
+# Connect to your production database
+DATABASE_URL="your-production-database-url"
+
+# Run migrations
+npx prisma migrate deploy
+
+# Seed initial data (zones, groups, churches)
+npm run db:seed
+```
+
+### Step 2: Deploy to Vercel
+
+**Via Vercel Dashboard:**
+
+1. Push your code to GitHub
+2. Go to [vercel.com/new](https://vercel.com/new)
+3. Import your Git repository
+4. Add environment variables:
+   - `DATABASE_URL` - Your production database URL
+   - `NEXTAUTH_SECRET` - Generate with `openssl rand -base64 32`
+   - `NEXTAUTH_URL` - Your production URL (e.g., `https://nexus-reporthub.vercel.app`)
+   - `NEXT_PUBLIC_APP_NAME` - "Nexus ReportHub"
+   - `NEXT_PUBLIC_APP_URL` - Your production URL
+5. Click **Deploy**
+
+**Via Vercel CLI:**
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy to production
+vercel --prod
+
+# Add environment variables
+vercel env add DATABASE_URL
+vercel env add NEXTAUTH_SECRET
+vercel env add NEXTAUTH_URL
+```
+
+### Step 3: Post-Deployment
+
+1. **Verify Deployment**: Visit your production URL and test login
+2. **Create Admin Users**: Use the seeded admin account or create new users
+3. **Configure Monitoring**: Set up error tracking (optional, Sentry recommended)
+4. **Enable Analytics**: Configure Vercel Analytics (optional)
+5. **Custom Domain**: Add your custom domain in Vercel settings (optional)
+
+### Step 4: Database Migrations
+
+For future schema changes:
+
+```bash
+# Create a migration
+npm run db:migrate
+
+# Deploy migration to production
+npx prisma migrate deploy
+```
+
+### Troubleshooting
+
+- **Build fails**: Check Node.js version (18+ required)
+- **Database connection errors**: Verify `DATABASE_URL` format and credentials
+- **Authentication issues**: Ensure `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are set correctly
+- **Missing tables**: Run `npx prisma migrate deploy` to apply migrations
+
 ## Future Enhancements
 
 - [ ] Mobile app (React Native)
-- [ ] Real-time notifications
+- [ ] Real-time notifications (Pusher/WebSockets)
 - [ ] Advanced analytics & forecasting
 - [ ] Automated payment reconciliation
 - [ ] Multi-department expansion
 - [ ] Bulk SMS/Email to churches
-- [ ] Export reports as PDF/Excel
 - [ ] API for third-party integrations
+- [ ] Two-factor authentication (2FA)
 
 ## Contributing
 

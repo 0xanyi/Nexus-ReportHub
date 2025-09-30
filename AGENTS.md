@@ -26,10 +26,14 @@ All other scripts wrap these core tasks.
 │  ├─ layout.tsx            → Root layout with fonts and providers
 │  └─ page.tsx              → Landing page
 ├─ components/              → React components
-│  └─ ui/                   → Reusable UI components (Button, Input, Card, etc.)
+│  ├─ charts/               → Chart components (Recharts integration)
+│  │  └─ FinancialCharts.tsx → Financial charts (bar, line, pie)
+│  ├─ ui/                   → Reusable UI components (Button, Input, Card, etc.)
+│  └─ ExportButtons.tsx     → PDF/Excel export functionality
 ├─ lib/                     → Shared utilities and configurations
 │  ├─ prisma.ts             → Prisma client singleton
 │  ├─ r2.ts                 → Cloudflare R2 storage utilities
+│  ├─ exports.ts            → PDF and Excel export utilities (jsPDF, xlsx)
 │  └─ utils.ts              → Helper functions (cn, formatCurrency, formatDate)
 ├─ prisma/                  → Database schema and migrations
 │  ├─ schema.prisma         → Prisma schema (9 models, enums, indexes)
@@ -176,9 +180,68 @@ A pull request is reviewable when it includes:
 - ✅ No changes to auto-generated files (`node_modules/`, `.next/`, `@prisma/client/`)
 - ✅ No environment variable changes without updating `.env.example`
 
+## Application Features
+
+### Core Functionality
+
+1. **Authentication & Authorization**
+   - Login/Register with email and password
+   - Role-based access control (SUPER_ADMIN, ZONE_ADMIN, GROUP_ADMIN, CHURCH_USER)
+   - Secure session management with NextAuth.js v5
+
+2. **Church Hierarchy Management** (Admin Only)
+   - **Groups**: Create, edit, delete ministry groups within zones
+   - **Churches**: Add, edit, move churches between groups
+   - Church transfer functionality maintains all transaction history
+   - Prevent deletion of groups/churches with financial data
+
+3. **Product Management** (Admin Only)
+   - Full CRUD for Rhapsody of Reality product types
+   - Support for multiple editions (ROR English, French, Polish, German, Teevo, etc.)
+   - Multi-currency pricing (GBP, USD, EUR, NGN, ESPEES)
+   - Validation prevents deletion of products in use
+
+4. **CSV Upload System** (Admin Only)
+   - Drag-and-drop file upload interface
+   - Automatic parsing with Papa Parse
+   - Smart validation (church names, product types, dates, quantities)
+   - Bulk transaction creation with detailed error reporting
+   - Upload history tracking with success/partial/failed status
+   - Template CSV download for proper formatting
+
+5. **Financial Reports**
+   - **Dashboard Overview**: Summary cards with key metrics
+   - **Visual Charts**: Monthly trends, product distribution, top churches (Recharts)
+   - **Church Financial Summary**: Complete table with purchases, payments, balances
+   - **Recent Transactions**: Latest activity feed
+   - Color-coded balance indicators (red for debt, green for credit)
+
+6. **Church Management**
+   - Churches list grouped by ministry groups
+   - Individual church detail pages with:
+     - Financial summary (purchases, payments, balance, copies)
+     - Product breakdown by type
+     - Monthly summary for current year
+     - Complete transaction history
+     - Complete payment history
+   - **Export functionality**: Download reports as PDF or Excel
+
+7. **Transaction Tracking**
+   - Purchase transactions with line items
+   - Product quantities and unit prices
+   - Automatic total calculations
+   - Multi-currency support
+   - Uploader audit trail
+
+8. **Payment Recording**
+   - Multiple payment methods (Bank Transfer, Cash, Espees)
+   - Payment purpose tracking (Printing, Sponsorship)
+   - Reference number support
+   - Linked to transactions for balance calculation
+
 ## Database Schema Reference
 
-### Core Models (9 total)
+### Core Models (10 total)
 
 1. **User** - System users with authentication
    - Roles: `SUPER_ADMIN | ZONE_ADMIN | GROUP_ADMIN | CHURCH_USER`
@@ -308,11 +371,42 @@ Before deploying to production:
 - [React Hook Form](https://react-hook-form.com)
 - [Zod Validation](https://zod.dev)
 - [Cloudflare R2 API](https://developers.cloudflare.com/r2/)
+- [Recharts Documentation](https://recharts.org)
+- [jsPDF Documentation](https://github.com/parallax/jsPDF)
+- [SheetJS (xlsx) Documentation](https://docs.sheetjs.com)
+- [Papa Parse Documentation](https://www.papaparse.com/docs)
 
 ---
 
-**Project Status**: Foundation Complete ✅  
-**Current Phase**: Phase 1 - Implementing CSV Upload System  
-**Version**: 1.0.0  
+**Project Status**: Core Features Complete ✅  
+**Current Phase**: Production Ready - All Major Features Implemented  
+**Version**: 2.0.0  
 **License**: ISC  
 **Maintainer**: admin@nexusreporthub.com
+
+### Implemented Features (v2.0.0)
+
+✅ Authentication & Role-Based Access Control  
+✅ Church Hierarchy Management (Groups & Churches)  
+✅ Product Management (Multi-Edition Support)  
+✅ CSV Upload System with Validation  
+✅ Financial Reporting Dashboard with Charts  
+✅ Church Detail Pages with Full History  
+✅ PDF/Excel Export Functionality  
+✅ Transaction & Payment Tracking  
+✅ Upload History & Audit Trails  
+✅ Multi-Currency Support  
+✅ Responsive UI with shadcn/ui
+
+### Ready for Deployment
+
+The application is feature-complete and ready for production deployment. All core functionality has been implemented and tested:
+
+- ✅ Full church hierarchy management
+- ✅ Complete financial tracking and reporting
+- ✅ Data import/export capabilities
+- ✅ Visual analytics with interactive charts
+- ✅ Secure authentication and authorization
+- ✅ Comprehensive audit trails
+
+**Next Steps**: Deploy to Vercel, configure production database, and set up monitoring.
