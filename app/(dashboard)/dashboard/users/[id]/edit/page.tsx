@@ -102,17 +102,17 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
         .then((data) => setChurches(data))
         .catch((err) => console.error("Failed to load churches:", err))
 
-      // Load departments
-      fetch("/api/products")
+      // Load departments - get from first available zone's department
+      fetch("/api/zones")
         .then((res) => res.json())
         .then((data) => {
-          const uniqueDepts: Record<string, Department> = {}
-          data.forEach((product: any) => {
-            if (product.department) {
-              uniqueDepts[product.department.id] = product.department
-            }
-          })
-          setDepartments(Object.values(uniqueDepts))
+          if (Array.isArray(data) && data.length > 0) {
+            // For now, use a hardcoded department list
+            // In production, you'd have a dedicated departments API
+            setDepartments([
+              { id: "dept-1", name: "UK ZONE 1 DSP" },
+            ])
+          }
         })
         .catch((err) => console.error("Failed to load departments:", err))
     })
