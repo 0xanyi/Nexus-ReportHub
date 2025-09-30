@@ -73,7 +73,7 @@ export default function EditDepartmentPage({ params }: { params: Promise<{ id: s
         router.push(`/dashboard/departments/${id}`)
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while updating the department")
       setIsLoading(false)
     }
@@ -117,7 +117,7 @@ export default function EditDepartmentPage({ params }: { params: Promise<{ id: s
         router.push("/dashboard/departments")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while deleting the department")
       setIsDeleting(false)
     }

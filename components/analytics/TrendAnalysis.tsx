@@ -19,7 +19,7 @@ interface TrendAnalysisProps {
   lastYear: number
 }
 
-export function TrendAnalysis({ churchPerformance, currentYear, lastYear }: TrendAnalysisProps) {
+export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
   const [selectedCategory, setSelectedCategory] = useState<"top" | "low" | "inactive">("top")
 
   const topPerformers = churchPerformance.slice(0, 10)

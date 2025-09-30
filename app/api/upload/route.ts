@@ -164,7 +164,7 @@ export async function POST(request: Request) {
         const totalAmount = quantity * unitPrice
 
         // Create transaction
-        const transaction = await prisma.transaction.create({
+        await prisma.transaction.create({
           data: {
             churchId: church.id,
             departmentId: department.id,

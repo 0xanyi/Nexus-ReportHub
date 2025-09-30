@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,7 +36,7 @@ export default function LoginPage() {
         router.push("/dashboard")
         router.refresh()
       }
-    } catch (error) {
+    } catch {
       setError("An error occurred. Please try again.")
       setIsLoading(false)
     }

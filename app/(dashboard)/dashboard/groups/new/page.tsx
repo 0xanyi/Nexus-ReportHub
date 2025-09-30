@@ -51,7 +51,7 @@ export default function NewGroupPage() {
         router.push("/dashboard/groups")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while creating the group")
       setIsLoading(false)
     }

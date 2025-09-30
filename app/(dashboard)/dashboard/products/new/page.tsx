@@ -41,7 +41,7 @@ export default function NewProductPage() {
         router.push("/dashboard/products")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
       setIsLoading(false)
     }
@@ -81,7 +81,7 @@ export default function NewProductPage() {
                 disabled={isLoading}
               />
               <p className="text-xs text-muted-foreground">
-                Use descriptive names like "ROR English", "ROR French", "Teevo", "Early Reader"
+                Use descriptive names like &ldquo;ROR English&rdquo;, &ldquo;ROR French&rdquo;, &ldquo;Teevo&rdquo;, &ldquo;Early Reader&rdquo;
               </p>
             </div>
 

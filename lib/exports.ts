@@ -78,7 +78,7 @@ export function exportChurchToPDF(data: ChurchData) {
   }
   
   // Payments Table
-  const finalY = (doc as any).lastAutoTable?.finalY || 95
+  const finalY = 95
   if (data.payments.length > 0) {
     doc.text("Payment History", 14, finalY + 10)
     autoTable(doc, {

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import { Decimal } from "@prisma/client/runtime/library"
 
 interface Transaction {
   id: string
@@ -13,8 +14,8 @@ interface Transaction {
   lineItems: Array<{
     id: string
     quantity: number
-    unitPrice: any
-    totalAmount: any
+    unitPrice: number | string | Decimal
+    totalAmount: number | string | Decimal
     productType: {
       name: string
     }

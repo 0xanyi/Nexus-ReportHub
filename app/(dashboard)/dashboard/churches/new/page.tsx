@@ -54,7 +54,7 @@ export default function NewChurchPage() {
         router.push("/dashboard/churches")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while creating the church")
       setIsLoading(false)
     }

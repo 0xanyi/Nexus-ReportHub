@@ -8,13 +8,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 
+interface Product {
+  id: string
+  name: string
+  unitPrice: number
+  currency: string
+}
+
 export default function EditProductPage() {
   const router = useRouter()
   const params = useParams()
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState<string>("")
-  const [product, setProduct] = useState<any>(null)
+  const [product, setProduct] = useState<Product | null>(null)
 
   useEffect(() => {
     async function fetchProduct() {
@@ -26,7 +33,7 @@ export default function EditProductPage() {
         } else {
           setError("Product not found")
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load product")
       } finally {
         setIsFetching(false)
@@ -64,7 +71,7 @@ export default function EditProductPage() {
         router.push("/dashboard/products")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
       setIsLoading(false)
     }
