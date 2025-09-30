@@ -193,15 +193,18 @@ A pull request is reviewable when it includes:
 ### Core Functionality
 
 1. **Authentication & Authorization**
-   - Login/Register with email and password
+   - Login with email and password
+   - **Public registration disabled** - users must be created by administrators
    - Role-based access control (SUPER_ADMIN, ZONE_ADMIN, GROUP_ADMIN, CHURCH_USER)
    - Secure session management with NextAuth.js v5
 
 2. **Church Hierarchy Management** (Admin Only)
+   - **Zones**: Top-level organizational units
    - **Groups**: Create, edit, delete ministry groups within zones
    - **Churches**: Add, edit, move churches between groups
+   - **Departments**: Manage organizational departments with products, users, and transactions
    - Church transfer functionality maintains all transaction history
-   - Prevent deletion of groups/churches with financial data
+   - Prevent deletion of groups/churches/departments with financial data
 
 3. **Product Management** (Admin Only)
    - Full CRUD for Rhapsody of Reality product types
@@ -255,13 +258,29 @@ A pull request is reviewable when it includes:
      - Role selection with descriptions
      - Organizational assignments (zone, group, church, department)
      - Form validation and error handling
+     - **Only method to create users** (public registration disabled)
    - **Edit User Form**:
      - Update name and role
      - Optional password change
      - Update organizational assignments
      - Pre-filled with current data
 
-8. **Church Management**
+8. **Department Management System** (Admin)
+   - **Department List Page**:
+     - Overview dashboard with statistics
+     - Product count, user count, transaction totals
+     - Sortable table with action buttons
+   - **Department Detail Page**:
+     - View all products in department
+     - List assigned users with roles
+     - Transaction and payment counts
+   - **Create/Edit Department**:
+     - Name and description fields
+     - Super Admin only access
+     - Delete protection for departments with dependencies
+   - **Navigation**: Departments link added to admin sidebar
+
+9. **Church Management**
    - **Enhanced Church List View**:
      - Grid and table view toggle
      - Real-time search and filtering
@@ -276,7 +295,13 @@ A pull request is reviewable when it includes:
      - **Paginated Payment History**: Filter by method, color-coded
    - **Export functionality**: Download reports as PDF or Excel
 
-9. **Transaction Tracking**
+10. **Dashboard Quick Actions**
+    - Upload CSV Data → Links to `/dashboard/upload`
+    - View Reports → Links to `/dashboard/reports`
+    - Manage Churches → Links to `/dashboard/churches`
+    - All quick action buttons functional with proper navigation
+
+11. **Transaction Tracking**
    - Purchase transactions with line items
    - Product quantities and unit prices
    - Automatic total calculations
@@ -284,12 +309,41 @@ A pull request is reviewable when it includes:
    - Uploader audit trail
    - Pagination and filtering in history views
 
-10. **Payment Recording**
+12. **Payment Recording**
     - Multiple payment methods (Bank Transfer, Cash, Espees)
     - Payment purpose tracking (Printing, Sponsorship)
     - Reference number support
     - Linked to transactions for balance calculation
     - Color-coded display in history views
+
+## Recent Fixes & Improvements (January 2025)
+
+### Authentication & Navigation
+- ✅ **Fixed logout functionality** - Now uses NextAuth server action with proper redirect
+- ✅ **Disabled public registration** - Users can only be created via `/dashboard/users/new` by Super Admins
+- ✅ **Removed register links** - Cleaned up from login page and landing page
+- ✅ **Register page redirects** - `/register` now automatically redirects to `/login`
+- ✅ **Register API disabled** - Returns 403 with clear message directing to admin
+
+### Department Management
+- ✅ **Complete department CRUD system** implemented
+- ✅ **Department list page** with statistics dashboard
+- ✅ **Department detail pages** showing products, users, and activity
+- ✅ **Department create/edit forms** with validation
+- ✅ **Navigation added** - Departments link in admin sidebar
+- ✅ **Delete protection** - Cannot delete departments with dependencies
+- ✅ **Textarea component** created for description fields
+
+### Dashboard Enhancements
+- ✅ **Quick action buttons wired** - All buttons now link to correct pages
+- ✅ **Upload CSV Data** → `/dashboard/upload`
+- ✅ **View Reports** → `/dashboard/reports`
+- ✅ **Manage Churches** → `/dashboard/churches`
+
+### Bug Fixes
+- ✅ **Webpack bundling error resolved** - Cleared `.next` cache
+- ✅ **TypeScript errors fixed** - Updated API route params for Next.js 15
+- ✅ **Build verification** - All pages compile successfully
 
 ## Database Schema Reference
 
@@ -432,25 +486,29 @@ Before deploying to production:
 
 **Project Status**: Production Ready ✅  
 **Current Phase**: All Major Features Implemented & Deployed  
-**Version**: 2.1.0  
+**Version**: 2.2.0  
 **License**: ISC  
 **Maintainer**: admin@nexusreporthub.com
 
-### Implemented Features (v2.1.0)
+### Implemented Features (v2.2.0)
 
 #### Core Features
 ✅ Authentication & Role-Based Access Control (4 roles)  
+✅ **Public Registration Disabled** - Admin-only user creation  
+✅ **Fixed Logout Functionality** - Server action with redirect  
 ✅ Church Hierarchy Management (Zone → Group → Church)  
+✅ **Department Management System** - Full CRUD with UI  
 ✅ Product Management (Multi-Edition Support)  
 ✅ CSV Upload System with Validation & History  
 ✅ Financial Reporting Dashboard with Charts  
+✅ **Dashboard Quick Actions** - All buttons functional  
 ✅ Church Detail Pages with Complete History  
 ✅ PDF/Excel Export Functionality  
 ✅ Transaction & Payment Tracking  
 ✅ Upload History & Audit Trails  
 ✅ Multi-Currency Support (GBP, USD, EUR, NGN, ESPEES)  
 
-#### Advanced Features (v2.1.0)
+#### Advanced Features (v2.2.0)
 ✅ **Advanced Analytics Dashboard**
   - 6 interactive chart types (Area, Line, Bar, Radar, etc.)
   - Year-over-year comparisons with growth calculations
@@ -466,6 +524,15 @@ Before deploying to production:
   - Password management with bcrypt security
   - Search, filter, and delete functionality
   - Role statistics dashboard
+  - **Only method for user creation** (public registration removed)
+
+✅ **Department Management System** (Admin)
+  - Complete CRUD operations for departments
+  - Department list with statistics dashboard
+  - Detail pages showing products, users, transactions
+  - Create/edit forms with validation
+  - Delete protection for departments with dependencies
+  - Navigation link in admin sidebar
 
 ✅ **Enhanced Church Management**
   - Grid and table view toggle
@@ -480,6 +547,7 @@ Before deploying to production:
   - Interactive components
   - Color-coded badges and indicators
   - Professional card-based designs
+  - Custom Textarea component for forms
 
 ### Deployment Status
 
@@ -497,7 +565,36 @@ The application is fully deployed and production-ready:
 - ✅ Build passing (35KB middleware)
 - ✅ Security hardened (bcrypt, JWT, role checks)
 
-### Recent Updates (v2.1.0)
+### Recent Updates (v2.2.0)
+
+**Security & Authentication** (Jan 2025)
+- Fixed logout functionality using NextAuth server actions
+- Disabled public registration entirely
+- Removed all register links from UI
+- Updated register API to return 403 Forbidden
+- Enforced admin-only user creation
+
+**Department Management** (Jan 2025)
+- Built complete department CRUD system
+- Created department list page with statistics
+- Implemented department detail views
+- Added create/edit/delete functionality
+- Integrated departments into admin navigation
+- Added delete protection for departments with data
+
+**Dashboard Improvements** (Jan 2025)
+- Wired all quick action buttons to correct pages
+- Fixed navigation for Upload CSV, View Reports, Manage Churches
+- Improved landing page (removed register button)
+
+**Bug Fixes** (Jan 2025)
+- Resolved webpack bundling error
+- Fixed Next.js 15 TypeScript errors in API routes
+- Updated route params to use Promise type
+- Created missing Textarea UI component
+- Cleared build cache issues
+
+**Previous Updates (v2.1.0)**
 
 **Advanced Analytics** (Jan 2025)
 - Added 6 chart types for data visualization

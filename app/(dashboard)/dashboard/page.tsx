@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -72,24 +73,24 @@ export default async function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <button className="w-full p-4 text-left border rounded-lg hover:bg-accent transition-colors">
+            <Link href="/dashboard/upload" className="block w-full p-4 text-left border rounded-lg hover:bg-accent transition-colors">
               <div className="font-medium">Upload CSV Data</div>
               <div className="text-sm text-muted-foreground">
                 Import transactions and payments
               </div>
-            </button>
-            <button className="w-full p-4 text-left border rounded-lg hover:bg-accent transition-colors">
+            </Link>
+            <Link href="/dashboard/reports" className="block w-full p-4 text-left border rounded-lg hover:bg-accent transition-colors">
               <div className="font-medium">View Reports</div>
               <div className="text-sm text-muted-foreground">
                 Generate monthly and annual summaries
               </div>
-            </button>
-            <button className="w-full p-4 text-left border rounded-lg hover:bg-accent transition-colors">
+            </Link>
+            <Link href="/dashboard/churches" className="block w-full p-4 text-left border rounded-lg hover:bg-accent transition-colors">
               <div className="font-medium">Manage Churches</div>
               <div className="text-sm text-muted-foreground">
                 Add or update church information
               </div>
-            </button>
+            </Link>
           </CardContent>
         </Card>
 
