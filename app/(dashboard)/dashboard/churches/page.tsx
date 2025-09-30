@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { formatCurrency } from "@/lib/utils"
 import Link from "next/link"
+import { ChurchListView } from "@/components/ChurchListView"
 
 export default async function ChurchesPage() {
   const session = await auth()
@@ -22,6 +22,12 @@ export default async function ChurchesPage() {
           zone: true,
         },
       },
+      transactions: {
+        include: {
+          lineItems: true,
+        },
+      },
+      payments: true,
       _count: {
         select: {
           transactions: true,
@@ -34,15 +40,29 @@ export default async function ChurchesPage() {
     },
   })
 
-  // Group churches by their groups
-  const churchesByGroup = churches.reduce((acc, church) => {
-    const groupName = church.group.name
-    if (!acc[groupName]) {
-      acc[groupName] = []
+  // Calculate financial data for each church
+  const churchesWithFinancials = churches.map((church) => {
+    const totalPurchases = church.transactions.reduce((sum, transaction) => {
+      return (
+        sum +
+        transaction.lineItems.reduce((lineSum, item) => lineSum + Number(item.totalAmount), 0)
+      )
+    }, 0)
+
+    const totalPayments = church.payments.reduce((sum, payment) => sum + Number(payment.amount), 0)
+
+    const balance = totalPayments - totalPurchases
+
+    return {
+      id: church.id,
+      name: church.name,
+      group: church.group,
+      _count: church._count,
+      totalPurchases,
+      totalPayments,
+      balance,
     }
-    acc[groupName].push(church)
-    return acc
-  }, {} as Record<string, typeof churches>)
+  })
 
   return (
     <div className="space-y-6">
@@ -60,24 +80,13 @@ export default async function ChurchesPage() {
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">Total Churches</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{churches.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Total Groups</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Object.keys(churchesByGroup).length}
-            </div>
           </CardContent>
         </Card>
 
@@ -92,38 +101,32 @@ export default async function ChurchesPage() {
             <p className="text-xs text-muted-foreground">With transactions</p>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Churches by Group */}
-      {Object.entries(churchesByGroup).map(([groupName, groupChurches]) => (
-        <Card key={groupName}>
+        <Card>
           <CardHeader>
-            <CardTitle>{groupName}</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {groupChurches.length} churches
-            </p>
+            <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {groupChurches.map((church) => (
-                <Link
-                  key={church.id}
-                  href={`/dashboard/churches/${church.id}`}
-                  className="block"
-                >
-                  <div className="p-4 border rounded-lg hover:border-primary hover:bg-accent transition-colors">
-                    <div className="font-medium mb-2">{church.name}</div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{church._count.transactions} transactions</span>
-                      <span>{church._count.payments} payments</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+            <div className="text-2xl font-bold">
+              {churches.reduce((sum, c) => sum + c._count.transactions, 0)}
             </div>
           </CardContent>
         </Card>
-      ))}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Churches with Debt</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">
+              {churchesWithFinancials.filter((c) => c.balance < 0).length}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Enhanced Church List */}
+      <ChurchListView churches={churchesWithFinancials} isAdmin={isAdmin} />
     </div>
   )
 }

@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { formatCurrency, formatDate } from "@/lib/utils"
 import Link from "next/link"
 import { ExportButtons } from "@/components/ExportButtons"
+import { TransactionHistory } from "@/components/TransactionHistory"
+import { PaymentHistory } from "@/components/PaymentHistory"
 
 export default async function ChurchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -290,105 +292,11 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
         </Card>
       )}
 
-      {/* Transaction History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-          <CardDescription>All purchases made by this church</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {church.transactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="p-4 border rounded-lg space-y-2"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="font-medium">
-                      {formatDate(transaction.transactionDate)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Uploaded by {transaction.uploader.name}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">
-                      {formatCurrency(
-                        transaction.lineItems.reduce(
-                          (sum, item) => sum + Number(item.totalAmount),
-                          0
-                        ),
-                        transaction.currency
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-2 border-t">
-                  {transaction.lineItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between text-sm py-1"
-                    >
-                      <span>
-                        {item.quantity}x {item.productType.name} @ {formatCurrency(Number(item.unitPrice), transaction.currency)}
-                      </span>
-                      <span className="font-medium">
-                        {formatCurrency(Number(item.totalAmount), transaction.currency)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-            {church.transactions.length === 0 && (
-              <p className="text-center text-muted-foreground py-4">
-                No transactions recorded yet
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Enhanced Transaction History with Filtering */}
+      <TransactionHistory transactions={church.transactions} />
 
-      {/* Payment History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment History</CardTitle>
-          <CardDescription>All payments made by this church</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {church.payments.map((payment) => (
-              <div
-                key={payment.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div>
-                  <div className="font-medium">{formatDate(payment.paymentDate)}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {payment.paymentMethod.replace("_", " ")} •{" "}
-                    {payment.forPurpose}
-                    {payment.referenceNumber && ` • Ref: ${payment.referenceNumber}`}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Uploaded by {payment.uploader.name}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-semibold text-green-600">
-                    {formatCurrency(Number(payment.amount), payment.currency)}
-                  </div>
-                </div>
-              </div>
-            ))}
-            {church.payments.length === 0 && (
-              <p className="text-center text-muted-foreground py-4">
-                No payments recorded yet
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Enhanced Payment History with Filtering */}
+      <PaymentHistory payments={church.payments} />
     </div>
   )
 }
