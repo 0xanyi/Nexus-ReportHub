@@ -48,6 +48,11 @@ export default async function DashboardLayout({
           href: "/dashboard/churches",
           description: "All congregations and their health",
         },
+        {
+          label: "Campaigns",
+          href: "/dashboard/campaigns",
+          description: "Track fundraising initiatives",
+        },
         ...(isAdmin
           ? [
               {

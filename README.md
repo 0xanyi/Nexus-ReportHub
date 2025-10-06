@@ -13,6 +13,7 @@ A comprehensive church financial and inventory management system for Rhapsody of
 - 📤 **Bulk Operations** - CSV upload for multiple churches and transactions at once
 - 📦 **Automated Products** - Auto-created from CSV uploads, unlimited language editions
 - 📥 **CSV Upload & Processing** - Three upload types (Transactions, Orders, Churches) with smart validation
+- 🎯 **Campaign Management** - Track fundraising campaigns across zones, groups, and churches
 - 📈 **Visual Analytics** - Interactive charts with Recharts (bar, line, pie, radar, area)
 - 📊 **Advanced Reporting** - Monthly/annual summaries, balance calculations, campaign tracking
 - 📄 **Export Capabilities** - Download reports as PDF or Excel
@@ -23,6 +24,7 @@ A comprehensive church financial and inventory management system for Rhapsody of
 ### Admin Features
 
 - ✅ **Zone Management** - Create, edit, delete zones with currency settings (Super Admin only)
+- ✅ **Campaign Management** - Create manual campaigns, view all campaigns with detailed breakdowns
 - ✅ **Bulk Church Upload** - CSV import for creating multiple churches at once
 - ✅ **Three CSV Upload Types** - Transactions, Orders, and Churches with separate templates
 - ✅ **Dynamic Product Detection** - Automatically detect and create products from order CSVs
@@ -38,6 +40,7 @@ A comprehensive church financial and inventory management system for Rhapsody of
 
 - ✅ View financial dashboards with charts
 - ✅ Browse churches and transaction histories
+- ✅ View campaigns and contribution breakdowns by zone/group/church
 - ✅ Export individual church reports
 - ✅ Track purchases, payments, and balances
 - ✅ View product breakdowns and monthly summaries
@@ -146,16 +149,20 @@ After seeding, you can login with:
 │   │   ├── dashboard/       # Main dashboard
 │   │   ├── reports/         # Financial reports with charts
 │   │   ├── churches/        # Church management and details
+│   │   ├── campaigns/       # Campaign management and tracking
 │   │   ├── groups/          # Group management (admin only)
-│   │   ├── products/        # Product management (admin only)
+│   │   ├── departments/     # Department management (admin only)
+│   │   ├── zones/           # Zone management (super admin only)
 │   │   └── upload/          # CSV upload system (admin only)
 │   ├── api/                 # API routes (RESTful endpoints)
 │   │   ├── auth/            # Authentication endpoints
+│   │   ├── campaigns/       # Campaign CRUD operations
 │   │   ├── churches/        # Church CRUD operations
+│   │   ├── departments/     # Department CRUD operations
 │   │   ├── groups/          # Group CRUD operations
-│   │   ├── products/        # Product CRUD operations
 │   │   ├── upload/          # CSV upload processing
-│   │   ├── zones/           # Zone listing
+│   │   ├── users/           # User management
+│   │   ├── zones/           # Zone CRUD operations
 │   │   └── template/        # CSV template download
 │   ├── globals.css          # Global styles
 │   ├── layout.tsx           # Root layout
@@ -166,6 +173,7 @@ After seeding, you can login with:
 │   └── ExportButtons.tsx    # PDF/Excel export buttons
 ├── lib/
 │   ├── prisma.ts            # Prisma client singleton
+│   ├── campaigns.ts         # Campaign giving aggregation helpers
 │   ├── exports.ts           # PDF/Excel export utilities
 │   ├── r2.ts                # Cloudflare R2 utilities
 │   └── utils.ts             # Helper functions
@@ -179,14 +187,16 @@ After seeding, you can login with:
 
 ## Database Schema
 
-The system uses a hierarchical structure:
+The system uses a hierarchical structure with 11 models:
 
 - **Zone** → Multiple Groups
 - **Group** → Multiple Churches  
 - **Church** → Transactions & Payments
-- **Department** → Product Types
+- **Department** → Product Types & Campaign Categories
 - **Transaction** → Line Items (product quantities)
-- **Payment** → Financial records
+- **Payment** → Financial records with optional campaign linking
+- **CampaignCategory** → Campaign tracking (auto-generated or manual)
+- **UploadHistory** → CSV upload audit trail
 
 ## CSV Upload Format
 

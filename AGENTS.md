@@ -329,13 +329,38 @@ A pull request is reviewable when it includes:
      - **Paginated Payment History**: Filter by method, color-coded
    - **Export functionality**: Download reports as PDF or Excel
 
-10. **Dashboard Quick Actions**
+10. **Campaign Management** (All Users)
+    - **Campaign List Page** (`/dashboard/campaigns`):
+      - Statistics dashboard (total campaigns, manual vs auto-generated, total raised, payments)
+      - Separate tables for manual and auto-generated campaigns
+      - Create new campaigns button (admin only)
+      - Badge indicators for campaign types
+      - Department association display
+    - **Campaign Detail Page** (`/dashboard/campaigns/[id]`):
+      - Total raised with payment count and average per payment
+      - Zone-level breakdown with percentages
+      - Group-level breakdown with church contributions
+      - Sortable tables by contribution amount
+      - Clickable links to church detail pages
+    - **Create Campaign Form** (`/dashboard/campaigns/new`):
+      - Manual campaign creation (admin only)
+      - Name and department selection
+      - Validation and error handling
+      - Auto-linked to payments via CSV uploads
+    - **Auto-Generation**:
+      - Campaigns automatically created from CSV transaction uploads
+      - Transaction types seen 3+ times become campaign categories
+      - Seamless integration with payment tracking
+    - **Navigation**: Campaigns link in Organization section (all users)
+    - **API Endpoints**: Full REST API (`/api/campaigns`, `/api/campaigns/[id]`)
+
+11. **Dashboard Quick Actions**
     - Upload CSV Data → Links to `/dashboard/upload`
     - View Reports → Links to `/dashboard/reports`
     - Manage Churches → Links to `/dashboard/churches`
     - All quick action buttons functional with proper navigation
 
-11. **Transaction Tracking**
+12. **Transaction Tracking**
    - Purchase transactions with line items
    - Product quantities and unit prices
    - Automatic total calculations
@@ -343,14 +368,27 @@ A pull request is reviewable when it includes:
    - Uploader audit trail
    - Pagination and filtering in history views
 
-12. **Payment Recording**
+13. **Payment Recording**
     - Multiple payment methods (Bank Transfer, Cash, Espees)
     - Payment purpose tracking (Printing, Sponsorship)
     - Reference number support
+    - Campaign category linking for sponsorship payments
     - Linked to transactions for balance calculation
     - Color-coded display in history views
 
 ## Recent Fixes & Improvements (January 2026)
+
+### Campaign Management System
+- ✅ **Complete Campaign CRUD** - List, create, update, and delete campaigns (Admin only)
+- ✅ **Campaign List Page** - View all campaigns with statistics dashboard
+- ✅ **Campaign Detail Page** - Detailed breakdown by zones, groups, and churches
+- ✅ **Manual Campaign Creation** - Create campaigns manually with form validation
+- ✅ **Auto-Generated Campaigns** - Automatic creation from CSV transaction uploads
+- ✅ **Campaign Statistics** - Total raised, payment count, average per payment
+- ✅ **Zone/Group/Church Breakdown** - Hierarchical contribution view with percentages
+- ✅ **Navigation Integration** - Campaigns link in Organization section (all users)
+- ✅ **API Endpoints** - Full REST API for campaign operations (`/api/campaigns`, `/api/campaigns/[id]`)
+- ✅ **Direct Prisma Queries** - Server components use Prisma directly for better performance
 
 ### CSV Upload & Data Import Enhancements
 - ✅ **Dynamic Order CSV Parsing** - Order uploads now support ANY product column names, not just hardcoded ones
@@ -561,11 +599,11 @@ Before deploying to production:
 
 **Project Status**: Production Ready ✅  
 **Current Phase**: All Major Features Implemented & Deployed  
-**Version**: 2.3.0  
+**Version**: 2.4.0  
 **License**: ISC  
 **Maintainer**: admin@nexusreporthub.com
 
-### Implemented Features (v2.3.0)
+### Implemented Features (v2.4.0)
 
 #### Core Features
 ✅ Authentication & Role-Based Access Control (4 roles)  
@@ -573,6 +611,7 @@ Before deploying to production:
 ✅ **Fixed Logout Functionality** - Server action with redirect  
 ✅ **Zone Management** - Complete CRUD for organizational zones (Super Admin)  
 ✅ Church Hierarchy Management (Zone → Group → Church)  
+✅ **Campaign Management** - Track fundraising campaigns with zone/group/church breakdowns  
 ✅ **Bulk Church Upload** - CSV upload for multiple churches  
 ✅ **Department Management System** - Full CRUD with UI  
 ✅ **Automated Product Management** - Auto-created from CSV uploads  
@@ -633,17 +672,29 @@ Before deploying to production:
 
 The application is fully deployed and production-ready:
 
-- ✅ All 30+ pages functional
-- ✅ 15+ API endpoints secured
+- ✅ All 33+ pages functional
+- ✅ 17+ API endpoints secured
 - ✅ 10+ interactive charts operational
 - ✅ Complete user management system
+- ✅ Campaign management with detailed breakdowns
 - ✅ Advanced analytics with YoY comparisons
 - ✅ Enhanced church management with filtering
 - ✅ Zero console errors
-- ✅ Build passing (35KB middleware)
+- ✅ Build passing (34.2KB middleware)
 - ✅ Security hardened (bcrypt, JWT, role checks)
 
-### Recent Updates (v2.3.0)
+### Recent Updates (v2.4.0)
+
+**Campaign Management** (Jan 2026)
+- Implemented complete campaign CRUD system for tracking fundraising initiatives
+- Created campaign list page with separate views for manual and auto-generated campaigns
+- Built campaign detail pages with zone/group/church contribution breakdowns
+- Added manual campaign creation form with department selection
+- Integrated campaign navigation link in Organization section (all users)
+- Created full REST API for campaign operations (/api/campaigns, /api/campaigns/[id])
+- Server components use direct Prisma queries for optimal performance
+- Auto-generated campaigns created from CSV transaction uploads
+- Payments linked to campaigns via campaignCategoryId foreign key
 
 **Zone Management** (Jan 2026)
 - Implemented complete zone CRUD system for Super Admins
