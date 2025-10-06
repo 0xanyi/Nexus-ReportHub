@@ -293,10 +293,28 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
       )}
 
       {/* Enhanced Transaction History with Filtering */}
-      <TransactionHistory transactions={church.transactions} />
+      <TransactionHistory 
+        transactions={church.transactions.map(t => ({
+          ...t,
+          lineItems: t.lineItems.map(item => ({
+            ...item,
+            unitPrice: Number(item.unitPrice),
+            totalAmount: Number(item.totalAmount),
+            productType: {
+              ...item.productType,
+              unitPrice: Number(item.productType.unitPrice),
+            },
+          })),
+        }))} 
+      />
 
       {/* Enhanced Payment History with Filtering */}
-      <PaymentHistory payments={church.payments} />
+      <PaymentHistory 
+        payments={church.payments.map(p => ({
+          ...p,
+          amount: Number(p.amount),
+        }))} 
+      />
     </div>
   )
 }

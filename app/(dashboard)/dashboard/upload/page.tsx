@@ -18,7 +18,14 @@ export default function UploadPage() {
     processed: number
     total: number
     errors?: string[]
+    summary?: {
+      campaignCategoriesCreated?: number
+      ordersCreated?: number
+      orderLineItemsCreated?: number
+    }
   } | null>(null)
+  const [uploadType, setUploadType] = useState<"TRANSACTION" | "ORDER">("TRANSACTION")
+  const [orderPeriod, setOrderPeriod] = useState("")
 
   function handleDragOver(e: React.DragEvent) {
     e.preventDefault()
@@ -64,6 +71,11 @@ export default function UploadPage() {
       return
     }
 
+    if (uploadType === "ORDER" && !orderPeriod) {
+      setError("Please provide the order period (YYYY-MM) for order uploads")
+      return
+    }
+
     setIsUploading(true)
     setError("")
     setSuccess("")
@@ -71,6 +83,10 @@ export default function UploadPage() {
 
     const formData = new FormData()
     formData.append("file", file)
+    formData.append("uploadType", uploadType)
+    if (uploadType === "ORDER" && orderPeriod) {
+      formData.append("orderPeriod", orderPeriod)
+    }
 
     try {
       const response = await fetch("/api/upload", {
@@ -90,6 +106,7 @@ export default function UploadPage() {
           processed: data.recordsProcessed,
           total: data.recordsProcessed,
           errors: data.errors,
+          summary: data.summary,
         })
         setFile(null)
         setIsUploading(false)
@@ -123,8 +140,7 @@ export default function UploadPage() {
         <CardHeader>
           <CardTitle>CSV File Upload</CardTitle>
           <CardDescription>
-            Upload a CSV file containing transaction data. The file should include church names,
-            dates, product types, quantities, and payment information.
+            Upload a CSV file containing order or transaction data for churches in the zone.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -156,6 +172,54 @@ export default function UploadPage() {
                 </ul>
               </div>
             )}
+
+            {uploadProgress?.summary && (
+              <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
+                <div className="font-medium">Summary</div>
+                <ul className="mt-2 space-y-1">
+                  {typeof uploadProgress.summary.campaignCategoriesCreated === "number" && (
+                    <li>
+                      Campaign categories created: {uploadProgress.summary.campaignCategoriesCreated}
+                    </li>
+                  )}
+                  {typeof uploadProgress.summary.ordersCreated === "number" && (
+                    <li>Orders recorded: {uploadProgress.summary.ordersCreated}</li>
+                  )}
+                  {typeof uploadProgress.summary.orderLineItemsCreated === "number" && (
+                    <li>Order line items recorded: {uploadProgress.summary.orderLineItemsCreated}</li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Upload Type</label>
+                <select
+                  value={uploadType}
+                  onChange={(event) => setUploadType(event.target.value as typeof uploadType)}
+                  disabled={isUploading}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="TRANSACTION">Bank Transaction Upload</option>
+                  <option value="ORDER">Monthly Order Upload</option>
+                </select>
+              </div>
+
+              {uploadType === "ORDER" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Order Period (MM-YYYY)</label>
+                  <input
+                    type="month"
+                    value={orderPeriod}
+                    onChange={(event) => setOrderPeriod(event.target.value)}
+                    disabled={isUploading}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    placeholder="2025-09"
+                  />
+                </div>
+              )}
+            </div>
 
             <div
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
@@ -252,51 +316,56 @@ export default function UploadPage() {
         <CardHeader>
           <CardTitle>CSV Format Requirements</CardTitle>
           <CardDescription>
-            Your CSV file should include the following columns:
+            Prepare your CSV depending on the selected upload type:
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-md font-mono text-sm overflow-x-auto">
-              Church Name, Date, Product Type, Quantity, Unit Price, Payment Amount, Payment Method, Reference
-            </div>
-            
-            <div className="grid gap-3 text-sm">
-              <div>
-                <span className="font-semibold">Church Name:</span> Must match existing church names exactly
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900">Bank Transaction Upload</h4>
+              <div className="mt-2 space-y-2 rounded-md bg-gray-50 p-4 font-mono text-sm">
+                <div>Date, Amount, Chapter, Group, Type, Payment Method (optional), Reference (optional)</div>
               </div>
-              <div>
-                <span className="font-semibold">Date:</span> Format: YYYY-MM-DD or DD/MM/YYYY
-              </div>
-              <div>
-                <span className="font-semibold">Product Type:</span> Must match existing product names (e.g., &ldquo;ROR English&rdquo;, &ldquo;Teevo&rdquo;)
-              </div>
-              <div>
-                <span className="font-semibold">Quantity:</span> Number of copies ordered
-              </div>
-              <div>
-                <span className="font-semibold">Unit Price:</span> Price per copy (optional if product has default price)
-              </div>
-              <div>
-                <span className="font-semibold">Payment Amount:</span> Total amount paid (optional)
-              </div>
-              <div>
-                <span className="font-semibold">Payment Method:</span> BANK_TRANSFER, CASH, or ESPEES
-              </div>
-              <div>
-                <span className="font-semibold">Reference:</span> Transaction reference number (optional)
+              <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                <li>Amounts are assumed to be GBP and will be stored as sponsorship giving unless the type contains &ldquo;print&rdquo;.</li>
+                <li>Types appearing more than twice will automatically create a campaign category.</li>
+                <li>Dates can be Excel serial values or DD/MM/YYYY formats.</li>
+              </ul>
+              <div className="mt-3">
+                <Link href="/api/template/download?type=transaction">
+                  <Button variant="outline" size="sm">
+                    <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download Transaction Template
+                  </Button>
+                </Link>
               </div>
             </div>
 
-            <div className="mt-4">
-              <Link href="/api/template/download">
-                <Button variant="outline" size="sm">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download Template CSV
-                </Button>
-              </Link>
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900">Monthly Order Upload</h4>
+              <div className="mt-2 space-y-2 rounded-md bg-gray-50 p-4 font-mono text-sm">
+                <div>Chapter, [Any Product Name], [Another Product], ..., Total Cost (optional), Total Cost Including Delivery (optional)</div>
+                <div className="mt-2 text-xs text-gray-600">Example: Chapter, ROR English Quantity, Teevo, Polish, French, Spanish, Total Cost</div>
+              </div>
+              <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                <li>Any column with a numeric quantity (except Chapter, Total Cost, Delivery, Notes) will be treated as a product.</li>
+                <li>Product columns can be named anything (e.g., &quot;ROR English&quot;, &quot;Polish&quot;, &quot;Teevo Quantity&quot;).</li>
+                <li>Each product is costed at £3 per copy. Products are auto-created if they don&apos;t exist.</li>
+                <li>Provide the order period month so transactions can be recorded accurately.</li>
+                <li>Only existing churches in the system will be processed.</li>
+              </ul>
+              <div className="mt-3">
+                <Link href="/api/template/download?type=order">
+                  <Button variant="outline" size="sm">
+                    <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download Order Template
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </CardContent>

@@ -4,12 +4,39 @@ import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 import Link from "next/link"
+import { CampaignGivingOverview } from "@/components/analytics/CampaignGivingOverview"
 
 export default async function ReportsPage() {
   const session = await auth()
 
   if (!session?.user) {
     redirect("/login")
+  }
+
+  let department
+
+  if (session.user.departmentId) {
+    department = await prisma.department.findUnique({
+      where: { id: session.user.departmentId },
+    })
+  } else {
+    department = await prisma.department.findFirst()
+  }
+
+  if (!department) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Financial Reports</h1>
+        <Card className="border-none bg-white/80 shadow-lg shadow-slate-900/5">
+          <CardHeader>
+            <CardTitle>Department not configured</CardTitle>
+            <CardDescription>
+              No department found. Please ensure at least one department exists in the system or assign a department to your profile.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
   }
 
   // Get all churches with their transactions and payments
@@ -234,6 +261,8 @@ export default async function ReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <CampaignGivingOverview departmentId={department.id} />
 
       <Card className="border-none bg-white/80 shadow-lg shadow-slate-900/5">
         <CardHeader>

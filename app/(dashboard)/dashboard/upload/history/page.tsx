@@ -80,6 +80,10 @@ export default async function UploadHistoryPage() {
                   <span className="ml-2 font-medium">{upload.recordsProcessed}</span>
                 </div>
                 <div>
+                  <span className="text-muted-foreground">Upload Type:</span>
+                  <span className="ml-2 font-medium capitalize">{upload.uploadType.toLowerCase()}</span>
+                </div>
+                <div>
                   <span className="text-muted-foreground">Upload Time:</span>
                   <span className="ml-2 font-medium">
                     {new Date(upload.uploadedAt).toLocaleTimeString()}

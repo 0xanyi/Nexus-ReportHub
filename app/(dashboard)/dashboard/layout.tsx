@@ -62,6 +62,15 @@ export default async function DashboardLayout({
               },
             ]
           : []),
+        ...(session.user.role === "SUPER_ADMIN"
+          ? [
+              {
+                label: "Zones",
+                href: "/dashboard/zones",
+                description: "Manage organizational zones",
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -69,11 +78,6 @@ export default async function DashboardLayout({
       items: [
         ...(isAdmin
           ? [
-              {
-                label: "Products",
-                href: "/dashboard/products",
-                description: "Catalogue of Rhapsody editions",
-              },
               {
                 label: "CSV Uploads",
                 href: "/dashboard/upload",

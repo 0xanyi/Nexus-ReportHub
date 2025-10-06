@@ -79,18 +79,10 @@ export default function NewUserPage() {
       .then((data) => setChurches(data))
       .catch((err) => console.error("Failed to load churches:", err))
 
-    // Load departments - get from first available zone's department
-    fetch("/api/zones")
+    // Load departments
+    fetch("/api/departments")
       .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          // For now, use a hardcoded department list
-          // In production, you'd have a dedicated departments API
-          setDepartments([
-            { id: "dept-1", name: "UK ZONE 1 DSP" },
-          ])
-        }
-      })
+      .then((data) => setDepartments(data))
       .catch((err) => console.error("Failed to load departments:", err))
   }, [])
 

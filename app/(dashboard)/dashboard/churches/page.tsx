@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ChurchListView } from "@/components/ChurchListView"
+import { ChurchBulkUpload } from "@/components/churches/BulkUpload"
 
 export default async function ChurchesPage() {
   const session = await auth()
@@ -74,9 +75,12 @@ export default async function ChurchesPage() {
           </p>
         </div>
         {isAdmin && (
-          <Link href="/dashboard/churches/new">
-            <Button>Add New Church</Button>
-          </Link>
+          <div className="flex gap-2">
+            <ChurchBulkUpload />
+            <Link href="/dashboard/churches/new">
+              <Button>Add New Church</Button>
+            </Link>
+          </div>
         )}
       </div>
 

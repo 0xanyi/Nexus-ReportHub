@@ -28,12 +28,15 @@ All other scripts wrap these core tasks.
 ├─ components/              → React components
 │  ├─ analytics/            → Analytics components
 │  │  ├─ AnalyticsCharts.tsx → 6 interactive chart types (area, line, bar, radar, etc.)
-│  │  └─ TrendAnalysis.tsx  → Performance categorization (top/low/inactive)
+│  │  ├─ TrendAnalysis.tsx  → Performance categorization (top/low/inactive)
+│  │  └─ CampaignGivingOverview.tsx → Campaign contribution breakdown by zone/group/church
 │  ├─ charts/               → Chart components (Recharts integration)
 │  │  └─ FinancialCharts.tsx → Financial charts (bar, line, pie)
+│  ├─ churches/             → Church-specific components
+│  │  └─ BulkUpload.tsx     → Bulk church CSV upload modal
 │  ├─ users/                → User management components
 │  │  └─ UserList.tsx       → User table with search, filter, delete
-│  ├─ ui/                   → Reusable UI components (Button, Input, Card, etc.)
+│  ├─ ui/                   → Reusable UI components (Button, Input, Card, Dialog, etc.)
 │  ├─ ChurchListView.tsx    → Enhanced church list with grid/table views
 │  ├─ TransactionHistory.tsx → Paginated transaction history
 │  ├─ PaymentHistory.tsx    → Paginated payment history
@@ -42,7 +45,8 @@ All other scripts wrap these core tasks.
 │  ├─ prisma.ts             → Prisma client singleton
 │  ├─ r2.ts                 → Cloudflare R2 storage utilities
 │  ├─ exports.ts            → PDF and Excel export utilities (jsPDF, xlsx)
-│  └─ utils.ts              → Helper functions (cn, formatCurrency, formatDate)
+│  ├─ utils.ts              → Helper functions (cn, formatCurrency, formatDate)
+│  └─ campaigns.ts          → Campaign giving aggregation helpers
 ├─ prisma/                  → Database schema and migrations
 │  ├─ schema.prisma         → Prisma schema (9 models, enums, indexes)
 │  └─ seed.ts               → Database seeding script
@@ -198,27 +202,50 @@ A pull request is reviewable when it includes:
    - Role-based access control (SUPER_ADMIN, ZONE_ADMIN, GROUP_ADMIN, CHURCH_USER)
    - Secure session management with NextAuth.js v5
 
-2. **Church Hierarchy Management** (Admin Only)
-   - **Zones**: Top-level organizational units
-   - **Groups**: Create, edit, delete ministry groups within zones
-   - **Churches**: Add, edit, move churches between groups
-   - **Departments**: Manage organizational departments with products, users, and transactions
+2. **Church Hierarchy Management**
+   - **Zones** (Super Admin Only):
+     - Full CRUD operations for organizational zones
+     - Set default currency per zone (GBP, USD, EUR, NGN)
+     - View zone statistics (groups, churches)
+     - Delete protection for zones with existing groups
+     - Navigation link in admin sidebar
+   - **Groups** (Admin Only):
+     - Create, edit, delete ministry groups within zones
+     - Assign groups to zones
+   - **Churches**:
+     - Individual church creation and editing
+     - **Bulk Church Upload**: CSV import for multiple churches at once
+     - Move churches between groups
+     - View financial summaries and transaction history
+   - **Departments** (Admin Only):
+     - Manage organizational departments with products, users, and transactions
+     - Full CRUD operations with statistics dashboard
    - Church transfer functionality maintains all transaction history
-   - Prevent deletion of groups/churches/departments with financial data
+   - Prevent deletion of groups/churches/departments/zones with dependencies
 
-3. **Product Management** (Admin Only)
-   - Full CRUD for Rhapsody of Reality product types
-   - Support for multiple editions (ROR English, French, Polish, German, Teevo, etc.)
-   - Multi-currency pricing (GBP, USD, EUR, NGN, ESPEES)
-   - Validation prevents deletion of products in use
+3. **Automated Product Management**
+   - Products are automatically created during CSV order uploads
+   - Support for unlimited language editions (ROR English, French, Polish, German, Spanish, Arabic, etc.)
+   - Default pricing: £3 per copy (GBP)
+   - Products persist in database for historical tracking and reporting
+   - No manual product management UI needed
 
 4. **CSV Upload System** (Admin Only)
-   - Drag-and-drop file upload interface
-   - Automatic parsing with Papa Parse
-   - Smart validation (church names, product types, dates, quantities)
-   - Bulk transaction creation with detailed error reporting
-   - Upload history tracking with success/partial/failed status
-   - Template CSV download for proper formatting
+   - **Three Upload Types**:
+     - **Transaction Upload**: Bank transactions with campaign tracking
+     - **Order Upload**: Monthly product orders with dynamic column detection
+     - **Bulk Church Upload**: Create multiple churches at once
+   - Drag-and-drop file upload interface with selectable modes
+   - Automatic parsing with Papa Parse, including Excel serial date handling
+   - Smart validation (church names, categories, dates, quantities, payment amounts)
+   - **Dynamic Order Parsing**: Automatically detects all product columns (not hardcoded)
+   - Order uploads generate £3-per-copy product line items; transaction uploads create payments
+   - **Auto-Product Creation**: Products are created on-the-fly if they don't exist
+   - Non-print transaction types seen 3+ times auto-create campaign categories and link payments
+   - Upload history tracking with success/partial/failed status and processed summaries
+   - **Separate Template Downloads**: Each upload type has its own correctly-formatted template
+   - Supports variable product sets across different months and churches
+   - **Flexible Department Lookup**: Uses first available department if user has no assignment
 
 5. **Financial Reports**
    - **Dashboard Overview**: Summary cards with key metrics
@@ -226,6 +253,7 @@ A pull request is reviewable when it includes:
    - **Church Financial Summary**: Complete table with purchases, payments, balances
    - **Recent Transactions**: Latest activity feed
    - Color-coded balance indicators (red for debt, green for credit)
+   - **Campaign Giving Overview**: Zone/group/church totals for active campaign categories
 
 6. **Advanced Analytics Dashboard** (All Users)
    - **Year-over-Year Comparisons**: Current vs previous year with growth %
@@ -281,6 +309,12 @@ A pull request is reviewable when it includes:
    - **Navigation**: Departments link added to admin sidebar
 
 9. **Church Management**
+   - **Bulk Church Upload** (Admin Only):
+     - CSV upload for creating multiple churches at once
+     - Validates group assignments and checks for duplicates
+     - Detailed success/error reporting per row
+     - Template download available
+     - Modal dialog interface with drag-and-drop
    - **Enhanced Church List View**:
      - Grid and table view toggle
      - Real-time search and filtering
@@ -316,6 +350,41 @@ A pull request is reviewable when it includes:
     - Linked to transactions for balance calculation
     - Color-coded display in history views
 
+## Recent Fixes & Improvements (January 2026)
+
+### CSV Upload & Data Import Enhancements
+- ✅ **Dynamic Order CSV Parsing** - Order uploads now support ANY product column names, not just hardcoded ones
+- ✅ **Flexible Product Detection** - Any column with numeric quantities (except metadata like Chapter, Total Cost) is treated as a product
+- ✅ **Auto-Product Creation** - Products are automatically created if they don't exist in the database
+- ✅ **Column Name Flexibility** - Supports various naming conventions (e.g., "ROR English", "Polish", "Teevo Quantity", "Spanish")
+- ✅ **Month-to-Month Variability** - Different months can have different product sets; churches can order different language editions
+- ✅ **Removed Manual Product Management** - Product pages removed; products are now fully automated via CSV uploads
+- ✅ **Separate Template Downloads** - Transaction and Order templates now have dedicated download buttons with correct formats
+- ✅ **Department Lookup Fix** - Upload route now uses first available department instead of hardcoded name
+- ✅ **Bulk Church Upload** - New CSV bulk upload feature for creating multiple churches at once
+- ✅ **Church Template Available** - Download template for bulk church uploads with proper format
+
+### Zone Management System
+- ✅ **Complete Zone CRUD** - List, create, edit, and delete zones (Super Admin only)
+- ✅ **Zone Statistics Dashboard** - View total zones, groups, churches, and active zones
+- ✅ **Currency Management** - Set default currency per zone (GBP, USD, EUR, NGN)
+- ✅ **Delete Protection** - Cannot delete zones with existing groups
+- ✅ **Navigation Integration** - Zones link added to Organization section in admin sidebar
+- ✅ **API Endpoints** - Full REST API for zone management (`/api/zones`, `/api/zones/[id]`)
+
+### User Management Fixes
+- ✅ **Real Department Fetching** - User create/edit pages now fetch actual departments from `/api/departments`
+- ✅ **Fixed Internal Server Error** - Removed hardcoded fake department data that caused save failures
+- ✅ **Department Dropdown** - Now shows real departments like "Rhapsody of Realities" instead of fake data
+
+## Recent Fixes & Improvements (October 2025)
+
+### Campaign & Upload Enhancements
+- ✅ Added dual CSV upload modes for bank transactions and monthly orders with contextual validation
+- ✅ Auto-generate and persist campaign categories when transaction types repeat across uploads
+- ✅ Extended upload history with upload type, processed summaries, and category creation counts
+- ✅ Created campaign giving aggregation utilities and dashboard overview component
+
 ## Recent Fixes & Improvements (January 2025)
 
 ### Authentication & Navigation
@@ -347,7 +416,7 @@ A pull request is reviewable when it includes:
 
 ## Database Schema Reference
 
-### Core Models (10 total)
+### Core Models (11 total)
 
 1. **User** - System users with authentication
    - Roles: `SUPER_ADMIN | ZONE_ADMIN | GROUP_ADMIN | CHURCH_USER`
@@ -378,9 +447,15 @@ A pull request is reviewable when it includes:
 9. **Payment** - Financial payment records
    - Methods: `BANK_TRANSFER | CASH | ESPEES`
    - Purpose: `PRINTING | SPONSORSHIP`
+   - Optional `campaignLabel` text and `campaignCategoryId` foreign key
 
-10. **UploadHistory** - Audit trail for CSV uploads
+10. **CampaignCategory** - Normalized campaign groupings auto/shared across uploads
+    - Unique per department (`@@unique([departmentId, normalizedName])`)
+    - Tracks whether the category was auto-generated from uploads
+
+11. **UploadHistory** - Audit trail for CSV uploads
     - Status: `SUCCESS | PARTIAL | FAILED | PROCESSING`
+    - Upload type: `ORDER | TRANSACTION`
 
 ### Key Relationships
 ```
@@ -486,20 +561,23 @@ Before deploying to production:
 
 **Project Status**: Production Ready ✅  
 **Current Phase**: All Major Features Implemented & Deployed  
-**Version**: 2.2.0  
+**Version**: 2.3.0  
 **License**: ISC  
 **Maintainer**: admin@nexusreporthub.com
 
-### Implemented Features (v2.2.0)
+### Implemented Features (v2.3.0)
 
 #### Core Features
 ✅ Authentication & Role-Based Access Control (4 roles)  
 ✅ **Public Registration Disabled** - Admin-only user creation  
 ✅ **Fixed Logout Functionality** - Server action with redirect  
+✅ **Zone Management** - Complete CRUD for organizational zones (Super Admin)  
 ✅ Church Hierarchy Management (Zone → Group → Church)  
+✅ **Bulk Church Upload** - CSV upload for multiple churches  
 ✅ **Department Management System** - Full CRUD with UI  
-✅ Product Management (Multi-Edition Support)  
-✅ CSV Upload System with Validation & History  
+✅ **Automated Product Management** - Auto-created from CSV uploads  
+✅ **Three CSV Upload Types** - Transactions, Orders, and Churches  
+✅ **Separate Template Downloads** - Dedicated templates per upload type  
 ✅ Financial Reporting Dashboard with Charts  
 ✅ **Dashboard Quick Actions** - All buttons functional  
 ✅ Church Detail Pages with Complete History  
@@ -565,7 +643,30 @@ The application is fully deployed and production-ready:
 - ✅ Build passing (35KB middleware)
 - ✅ Security hardened (bcrypt, JWT, role checks)
 
-### Recent Updates (v2.2.0)
+### Recent Updates (v2.3.0)
+
+**Zone Management** (Jan 2026)
+- Implemented complete zone CRUD system for Super Admins
+- Created zone list page with statistics dashboard
+- Built zone create/edit pages with currency selection
+- Added delete functionality with protection for zones with groups
+- Integrated zones navigation link in admin sidebar (Super Admin only)
+- Created full REST API for zone operations
+
+**CSV Upload & Data Import** (Jan 2026)
+- Implemented dynamic product column detection for Order uploads
+- Removed hardcoded product mappings - supports unlimited language editions
+- Created bulk church upload feature with validation
+- Added separate template downloads for each upload type (Transaction, Order, Churches)
+- Fixed department lookup to use first available department
+- Enhanced upload UI with modal dialogs and drag-and-drop
+- Added Radix UI Dialog component for modals
+
+**User Management Fixes** (Jan 2026)
+- Fixed internal server error when editing users with department assignments
+- Updated user create/edit pages to fetch real departments from API
+- Removed hardcoded fake department data ("UK ZONE 1 DSP" with id "dept-1")
+- Department dropdowns now show actual departments from database
 
 **Security & Authentication** (Jan 2025)
 - Fixed logout functionality using NextAuth server actions

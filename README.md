@@ -6,13 +6,15 @@ A comprehensive church financial and inventory management system for Rhapsody of
 
 ### Core Functionality
 
-- 🔐 **Secure Authentication** - NextAuth.js v5 with role-based access control
+- 🔐 **Secure Authentication** - NextAuth.js v5 with role-based access control (4 roles)
+- 🌍 **Zone Management** - Complete CRUD for organizational zones with currency settings (Super Admin)
 - 📊 **Hierarchical Management** - Full CRUD for Zones, Groups, and Churches
 - 🏛️ **Church Transfer** - Move churches between groups while preserving history
-- 📦 **Product Management** - Multi-edition Rhapsody support (English, French, German, Polish, etc.)
-- 📤 **CSV Upload & Processing** - Drag-and-drop bulk import with smart validation
-- 📈 **Visual Analytics** - Interactive charts with Recharts (bar, line, pie)
-- 📊 **Advanced Reporting** - Monthly/annual summaries, balance calculations
+- 📤 **Bulk Operations** - CSV upload for multiple churches and transactions at once
+- 📦 **Automated Products** - Auto-created from CSV uploads, unlimited language editions
+- 📥 **CSV Upload & Processing** - Three upload types (Transactions, Orders, Churches) with smart validation
+- 📈 **Visual Analytics** - Interactive charts with Recharts (bar, line, pie, radar, area)
+- 📊 **Advanced Reporting** - Monthly/annual summaries, balance calculations, campaign tracking
 - 📄 **Export Capabilities** - Download reports as PDF or Excel
 - 💰 **Multi-Currency Support** - GBP, USD, EUR, NGN, and Espees
 - 🔍 **Audit Trails** - Complete upload history and transaction tracking
@@ -20,13 +22,17 @@ A comprehensive church financial and inventory management system for Rhapsody of
 
 ### Admin Features
 
+- ✅ **Zone Management** - Create, edit, delete zones with currency settings (Super Admin only)
+- ✅ **Bulk Church Upload** - CSV import for creating multiple churches at once
+- ✅ **Three CSV Upload Types** - Transactions, Orders, and Churches with separate templates
+- ✅ **Dynamic Product Detection** - Automatically detect and create products from order CSVs
+- ✅ **Department Management** - Full CRUD for organizational departments
 - ✅ Create, edit, delete groups and churches
 - ✅ Move churches between groups
-- ✅ Manage product types and pricing
-- ✅ Bulk CSV imports with error handling
-- ✅ View comprehensive financial reports
+- ✅ View comprehensive financial reports with YoY comparisons
 - ✅ Export church/group reports (PDF/Excel)
 - ✅ Track upload history with detailed logs
+- ✅ User management with organizational assignments
 
 ### User Features
 
