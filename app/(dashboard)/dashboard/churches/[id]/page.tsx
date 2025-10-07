@@ -75,6 +75,17 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
     )
   }, 0)
 
+  // Calculate total copies ordered
+  const totalCopies = church.transactions.reduce((sum, transaction) => {
+    return (
+      sum +
+      transaction.lineItems.reduce(
+        (lineSum, item) => lineSum + item.quantity,
+        0
+      )
+    )
+  }, 0)
+
   // Calculate PRINTING payments only (for balance calculation)
   const printingPayments = church.payments
     .filter((p) => p.forPurpose === "PRINTING")
@@ -187,7 +198,7 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
               {formatCurrency(totalOrders, "GBP")}
             </div>
             <p className="text-xs text-muted-foreground">
-              {church.transactions.length} orders
+              {totalCopies.toLocaleString()} copies ordered overall
             </p>
           </CardContent>
         </Card>
@@ -240,37 +251,35 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
       </div>
 
       {/* Product Breakdown */}
-      <Card>
+      <Card className="border-none bg-white/80 shadow-lg shadow-slate-900/5">
         <CardHeader>
           <CardTitle>Product Breakdown</CardTitle>
-          <CardDescription>Copies ordered by product type</CardDescription>
+          <CardDescription>
+            Copies ordered by product type • {totalCopies.toLocaleString()} total copies
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Object.entries(productBreakdown).map(([productName, data]) => (
               <div
                 key={productName}
-                className="flex items-center justify-between p-3 border rounded-lg"
+                className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm"
               >
-                <div>
-                  <div className="font-medium">{productName}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {data.quantity.toLocaleString()} copies
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold">
+                <div className="text-sm font-medium text-slate-900">{productName}</div>
+                <div className="mt-2 flex items-end justify-between">
+                  <div className="text-2xl font-semibold text-slate-800">{data.quantity}</div>
+                  <div className="text-sm text-slate-500">
                     {formatCurrency(data.totalAmount, "GBP")}
                   </div>
                 </div>
               </div>
             ))}
-            {Object.keys(productBreakdown).length === 0 && (
-              <p className="text-center text-muted-foreground py-4">
-                No orders recorded yet
-              </p>
-            )}
           </div>
+          {Object.keys(productBreakdown).length === 0 && (
+            <p className="text-center text-muted-foreground py-4">
+              No orders recorded yet
+            </p>
+          )}
         </CardContent>
       </Card>
 
