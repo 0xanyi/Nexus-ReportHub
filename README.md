@@ -30,6 +30,7 @@ A comprehensive church financial and inventory management system for Rhapsody of
 - ✅ **Three CSV Upload Types** - Transactions, Orders, and Churches with separate templates
 - ✅ **Dynamic Product Detection** - Automatically detect and create products from order CSVs
 - ✅ **Manual Order Management** - Create, edit, and delete orders directly from church pages
+- ✅ **Product Management** - Add, edit, and manage products with pricing and department assignment
 - ✅ **Department Management** - Full CRUD for organizational departments
 - ✅ Create, edit, delete groups and churches
 - ✅ Move churches between groups
@@ -341,17 +342,18 @@ npx prisma migrate deploy
 
 ### Version 2.5.0 (January 2026)
 
-**Manual Order Management System**
-- ✅ **Manual Order Creation**: Add orders directly from church detail pages with multiple products
-- ✅ **Order Editing**: Modify existing orders (date, products, quantities, notes)
-- ✅ **Order Deletion**: Remove orders with confirmation dialog
-- ✅ **Multi-Product Support**: Add multiple products to single orders with real-time calculations
-- ✅ **Admin-only Access**: Only SUPER_ADMIN and ZONE_ADMIN can create/edit/delete orders
-- ✅ **Order History Integration**: Edit/delete buttons in transaction history
+**Product Management System**
+- ✅ **Product Creation**: Add new products manually with department assignment
+- ✅ **Product Editing**: Update product names, prices, and department assignments
+- ✅ **Product Deletion**: Remove products with protection for products in use
+- ✅ **Pricing Management**: Set and update product prices with currency support
+- ✅ **Department Organization**: Products organized by department with uniqueness constraints
+- ✅ **Usage Tracking**: Display order count for each product
+- ✅ **Admin-only Access**: Only SUPER_ADMIN and ZONE_ADMIN can manage products
 - ✅ **Form Validation**: Client and server-side validation with error handling
-- ✅ **Responsive Design**: Works on mobile, tablet, and desktop
-- ✅ **API Endpoints**: Full REST API for order operations (`/api/transactions`, `/api/transactions/[id]`)
-- ✅ **UI Components**: OrderForm dialog and ChurchOrdersManager wrapper component
+- ✅ **Responsive UI**: Card-based layout with edit/delete actions
+- ✅ **API Endpoints**: Full REST API for product operations (`/api/products`, `/api/products/[id]`)
+- ✅ **Navigation Integration**: Products link added to admin sidebar
 
 ## Future Enhancements
 
