@@ -7,6 +7,7 @@ export interface MonthlyPaymentData {
   month: number
   monthName: string
   printIncomePounds: number
+  printIncomeEspees: number
   reachoutWorldPayPounds: number
   zonePoundPayment: number
   zoneNairaPayment: number
@@ -22,6 +23,7 @@ export interface PaymentSummaryData {
   months: MonthlyPaymentData[]
   totals: {
     printIncomePounds: number
+    printIncomeEspees: number
     reachoutWorldPayPounds: number
     zonePoundPayment: number
     zoneNairaPayment: number
@@ -120,6 +122,7 @@ export async function generatePaymentSummary(
     month: i + 1,
     monthName: MONTH_NAMES[i],
     printIncomePounds: 0,
+    printIncomeEspees: 0,
     reachoutWorldPayPounds: 0,
     zonePoundPayment: 0,
     zoneNairaPayment: 0,
@@ -134,9 +137,13 @@ export async function generatePaymentSummary(
     const monthData = monthlyData[month]
     const amount = Number(payment.amount)
 
-    // Income towards Prints (GBP only)
-    if (payment.forPurpose === "PRINTING" && payment.currency === "GBP") {
-      monthData.printIncomePounds += amount
+    // Income towards Prints
+    if (payment.forPurpose === "PRINTING") {
+      if (payment.currency === "GBP") {
+        monthData.printIncomePounds += amount
+      } else if (payment.currency === "ESPEES") {
+        monthData.printIncomeEspees += amount
+      }
     }
 
     // Sponsorship/Project payments
@@ -178,6 +185,7 @@ export async function generatePaymentSummary(
   const totals = monthlyData.reduce(
     (acc, month) => ({
       printIncomePounds: acc.printIncomePounds + month.printIncomePounds,
+      printIncomeEspees: acc.printIncomeEspees + month.printIncomeEspees,
       reachoutWorldPayPounds: acc.reachoutWorldPayPounds + month.reachoutWorldPayPounds,
       zonePoundPayment: acc.zonePoundPayment + month.zonePoundPayment,
       zoneNairaPayment: acc.zoneNairaPayment + month.zoneNairaPayment,
@@ -187,6 +195,7 @@ export async function generatePaymentSummary(
     }),
     {
       printIncomePounds: 0,
+      printIncomeEspees: 0,
       reachoutWorldPayPounds: 0,
       zonePoundPayment: 0,
       zoneNairaPayment: 0,
@@ -204,7 +213,7 @@ export async function generatePaymentSummary(
       totals.zonePoundPayment +
       totals.groupLinksPounds,
     naira: totals.zoneNairaPayment,
-    espees: totals.zoneEspeesPayment + totals.groupLinksEspees,
+    espees: totals.printIncomeEspees + totals.zoneEspeesPayment + totals.groupLinksEspees,
   }
 
   return {
@@ -227,6 +236,7 @@ export function aggregateQuarterly(data: PaymentSummaryData): PaymentSummaryData
       month: q + 1,
       monthName: `Q${q + 1} (${quarterMonths.map((m) => m.monthName.slice(0, 3)).join("-")})`,
       printIncomePounds: 0,
+      printIncomeEspees: 0,
       reachoutWorldPayPounds: 0,
       zonePoundPayment: 0,
       zoneNairaPayment: 0,
@@ -237,6 +247,7 @@ export function aggregateQuarterly(data: PaymentSummaryData): PaymentSummaryData
 
     quarterMonths.forEach((month) => {
       quarterData.printIncomePounds += month.printIncomePounds
+      quarterData.printIncomeEspees += month.printIncomeEspees
       quarterData.reachoutWorldPayPounds += month.reachoutWorldPayPounds
       quarterData.zonePoundPayment += month.zonePoundPayment
       quarterData.zoneNairaPayment += month.zoneNairaPayment
