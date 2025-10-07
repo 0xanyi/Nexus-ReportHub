@@ -28,7 +28,7 @@ interface GroupData {
   zone: string
   churches: Array<{
     name: string
-    purchases: number
+    orders: number
     payments: number
     balance: number
   }>
@@ -190,10 +190,10 @@ export function exportGroupToPDF(data: GroupData) {
   // Churches Table
   autoTable(doc, {
     startY: 95,
-    head: [["Church", "Purchases", "Payments", "Balance", "Status"]],
+    head: [["Church", "Orders", "Payments", "Balance", "Status"]],
     body: data.churches.map((c) => [
       c.name,
-      `£${c.purchases.toLocaleString()}`,
+      `£${c.orders.toLocaleString()}`,
       `£${c.payments.toLocaleString()}`,
       `£${Math.abs(c.balance).toLocaleString()}`,
       c.balance < 0 ? "Owed" : "Credit",
@@ -242,10 +242,10 @@ export function exportGroupToExcel(data: GroupData) {
   
   // Churches Sheet
   const churchesData = [
-    ["Church", "Purchases", "Payments", "Balance", "Status"],
+    ["Church", "Orders", "Payments", "Balance", "Status"],
     ...data.churches.map((c) => [
       c.name,
-      c.purchases,
+      c.orders,
       c.payments,
       Math.abs(c.balance),
       c.balance < 0 ? "Owed" : "Credit",

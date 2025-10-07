@@ -23,16 +23,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 interface MonthlyData {
   month: string
-  currentPurchases: number
+  currentOrders: number
   currentPayments: number
-  lastPurchases: number
+  lastOrders: number
   lastPayments: number
   collectionRate: number
 }
 
 interface GroupData {
   name: string
-  totalPurchases: number
+  totalOrders: number
   totalPayments: number
   collectionRate: number
   churchCount: number
@@ -49,8 +49,8 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
       {/* Year-over-Year Comparison */}
       <Card className="col-span-2">
         <CardHeader>
-          <CardTitle>Year-over-Year Purchase Comparison</CardTitle>
-          <CardDescription>Compare current year vs previous year purchases by month</CardDescription>
+          <CardTitle>Year-over-Year Order Comparison</CardTitle>
+          <CardDescription>Compare current year vs previous year orders by month</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
@@ -72,7 +72,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               <Legend />
               <Area
                 type="monotone"
-                dataKey="currentPurchases"
+                dataKey="currentOrders"
                 stroke="#8884d8"
                 fillOpacity={1}
                 fill="url(#colorCurrent)"
@@ -80,7 +80,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               />
               <Area
                 type="monotone"
-                dataKey="lastPurchases"
+                dataKey="lastOrders"
                 stroke="#82ca9d"
                 fillOpacity={1}
                 fill="url(#colorLast)"
@@ -91,11 +91,11 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
         </CardContent>
       </Card>
 
-      {/* Collection Rate Trend */}
+      {/* Remittance Rate Trend */}
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Collection Rate</CardTitle>
-          <CardDescription>Percentage of purchases collected each month</CardDescription>
+          <CardTitle>Monthly Remittance Rate</CardTitle>
+          <CardDescription>Percentage of orders remitted each month</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -111,7 +111,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
                 strokeWidth={3}
                 dot={{ r: 5 }}
                 activeDot={{ r: 7 }}
-                name="Collection Rate"
+                name="Remittance Rate"
               />
             </LineChart>
           </ResponsiveContainer>
@@ -122,7 +122,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
       <Card>
         <CardHeader>
           <CardTitle>Group Performance</CardTitle>
-          <CardDescription>Collection rates by group</CardDescription>
+          <CardDescription>Remittance rates by group</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -134,17 +134,17 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
                 formatter={(value: number) => `${value.toFixed(1)}%`}
                 contentStyle={{ borderRadius: "8px" }}
               />
-              <Bar dataKey="collectionRate" fill="#10b981" name="Collection Rate %" radius={[0, 8, 8, 0]} />
+              <Bar dataKey="collectionRate" fill="#10b981" name="Remittance Rate %" radius={[0, 8, 8, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* Payments vs Purchases Trend */}
+      {/* Payments vs Orders Trend */}
       <Card className="col-span-2">
         <CardHeader>
-          <CardTitle>Payments vs Purchases (Current Year)</CardTitle>
-          <CardDescription>Monthly breakdown of purchases and payments</CardDescription>
+          <CardTitle>Payments vs Orders (Current Year)</CardTitle>
+          <CardDescription>Monthly breakdown of orders and payments</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
@@ -156,11 +156,11 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               <Legend />
               <Line
                 type="monotone"
-                dataKey="currentPurchases"
+                dataKey="currentOrders"
                 stroke="#ef4444"
                 strokeWidth={2}
                 dot={{ r: 4 }}
-                name="Purchases"
+                name="Orders"
               />
               <Line
                 type="monotone"
@@ -188,7 +188,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               <PolarAngleAxis dataKey="name" />
               <PolarRadiusAxis domain={[0, 100]} />
               <Radar
-                name="Collection Rate"
+                name="Remittance Rate"
                 dataKey="collectionRate"
                 stroke="#8884d8"
                 fill="#8884d8"
@@ -204,7 +204,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
       <Card>
         <CardHeader>
           <CardTitle>Group Financial Summary</CardTitle>
-          <CardDescription>Total purchases and payments by group</CardDescription>
+          <CardDescription>Total orders and payments by group</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
@@ -214,7 +214,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               <YAxis />
               <Tooltip formatter={(value: number) => `£${value.toLocaleString()}`} />
               <Legend />
-              <Bar dataKey="totalPurchases" fill="#8884d8" name="Purchases" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="totalOrders" fill="#8884d8" name="Orders" radius={[8, 8, 0, 0]} />
               <Bar dataKey="totalPayments" fill="#82ca9d" name="Payments" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

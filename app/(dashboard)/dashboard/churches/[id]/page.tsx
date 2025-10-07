@@ -243,7 +243,7 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
       <Card>
         <CardHeader>
           <CardTitle>Product Breakdown</CardTitle>
-          <CardDescription>Copies purchased by product type</CardDescription>
+          <CardDescription>Copies ordered by product type</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -267,7 +267,7 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
             ))}
             {Object.keys(productBreakdown).length === 0 && (
               <p className="text-center text-muted-foreground py-4">
-                No purchases recorded yet
+                No orders recorded yet
               </p>
             )}
           </div>
@@ -279,7 +279,7 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
         <Card>
           <CardHeader>
             <CardTitle>Monthly Summary {currentYear}</CardTitle>
-            <CardDescription>Purchases by month this year</CardDescription>
+            <CardDescription>Orders by month this year</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-6">

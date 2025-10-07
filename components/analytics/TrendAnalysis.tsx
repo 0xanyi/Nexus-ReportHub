@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils"
 interface ChurchPerformance {
   name: string
   group: string
-  totalPurchases: number
+  totalOrders: number
   totalPayments: number
   collectionRate: number
   transactionCount: number
@@ -42,7 +42,7 @@ export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
     },
     {
       id: "low",
-      label: "Low Collection Rate",
+      label: "Low Remittance Rate",
       count: lowPerformers.length,
       data: lowPerformers,
     },
@@ -64,7 +64,7 @@ export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
         <CardHeader>
           <CardTitle>Church Performance Analysis</CardTitle>
           <CardDescription>
-            Analyze church performance by collection rates and activity levels
+            Analyze church performance by remittance rates and activity levels
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -97,9 +97,9 @@ export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
           </CardTitle>
           <CardDescription>
             {selectedCategory === "top" &&
-              "Churches with the highest payment collection rates"}
+              "Churches with the highest payment remittance rates"}
             {selectedCategory === "low" &&
-              "Churches with collection rates below 50% - may need follow-up"}
+              "Churches with remittance rates below 50% - may need follow-up"}
             {selectedCategory === "inactive" &&
               "Churches with no transaction history - verify status"}
           </CardDescription>
@@ -123,9 +123,9 @@ export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="text-sm text-muted-foreground">Purchases</div>
+                      <div className="text-sm text-muted-foreground">Orders</div>
                       <div className="font-semibold">
-                        {formatCurrency(church.totalPurchases, "GBP")}
+                        {formatCurrency(church.totalOrders, "GBP")}
                       </div>
                     </div>
                     <div className="text-right">
@@ -174,7 +174,7 @@ export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Average Collection Rate</span>
+                  <span className="text-muted-foreground">Average Remittance Rate</span>
                   <span className="font-semibold">
                     {topPerformers.length > 0
                       ? (
@@ -186,10 +186,10 @@ export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Total Purchases</span>
+                  <span className="text-muted-foreground">Total Orders</span>
                   <span className="font-semibold">
                     {formatCurrency(
-                      topPerformers.reduce((sum, c) => sum + c.totalPurchases, 0),
+                      topPerformers.reduce((sum, c) => sum + c.totalOrders, 0),
                       "GBP"
                     )}
                   </span>
@@ -212,7 +212,7 @@ export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="font-semibold text-yellow-800 mb-1">Action Required</div>
                 <p className="text-sm text-yellow-700">
-                  These churches have collection rates below 50%. Follow-up communication
+                  These churches have remittance rates below 50%. Follow-up communication
                   recommended.
                 </p>
               </div>
@@ -222,7 +222,7 @@ export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
                   <span className="font-semibold text-destructive">
                     {formatCurrency(
                       lowPerformers.reduce(
-                        (sum, c) => sum + (c.totalPurchases - c.totalPayments),
+                        (sum, c) => sum + (c.totalOrders - c.totalPayments),
                         0
                       ),
                       "GBP"
@@ -230,7 +230,7 @@ export function TrendAnalysis({ churchPerformance }: TrendAnalysisProps) {
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Avg Collection Rate</span>
+                  <span className="text-muted-foreground">Avg Remittance Rate</span>
                   <span className="font-semibold">
                     {lowPerformers.length > 0
                       ? (

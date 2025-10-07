@@ -68,8 +68,8 @@ export default async function ReportsPage() {
   // Calculate summary statistics
   const stats = churches.reduce(
     (acc, church) => {
-      // Calculate total purchases
-      const totalPurchases = church.transactions.reduce((sum, transaction) => {
+      // Calculate total orders
+      const totalOrders = church.transactions.reduce((sum, transaction) => {
         const transactionTotal = transaction.lineItems.reduce(
           (lineSum, item) => lineSum + Number(item.totalAmount),
           0
@@ -84,10 +84,10 @@ export default async function ReportsPage() {
       )
 
       // Calculate balance (negative means church owes money)
-      const balance = totalPayments - totalPurchases
+      const balance = totalPayments - totalOrders
 
       acc.totalChurches++
-      acc.totalPurchases += totalPurchases
+      acc.totalOrders += totalOrders
       acc.totalPayments += totalPayments
       
       if (balance < 0) {
@@ -106,7 +106,7 @@ export default async function ReportsPage() {
     },
     {
       totalChurches: 0,
-      totalPurchases: 0,
+      totalOrders: 0,
       totalPayments: 0,
       totalOutstanding: 0,
       totalCopies: 0,
@@ -197,7 +197,7 @@ export default async function ReportsPage() {
   })
 
   const overallCollectionRate =
-    stats.totalPurchases > 0 ? (stats.totalPayments / stats.totalPurchases) * 100 : 0
+    stats.totalOrders > 0 ? (stats.totalPayments / stats.totalOrders) * 100 : 0
 
   // Get zones with groups for payment summary generator
   const zones = await prisma.zone.findMany({
@@ -226,7 +226,7 @@ export default async function ReportsPage() {
           Financial Reports
         </h1>
         <p className="text-sm text-slate-500">
-          View consolidated balances, collection rates, and the latest activity across the
+          View consolidated balances, remittance rates, and the latest activity across the
           network. Charts now live inside the dedicated analytics workspace.
         </p>
         <Link
@@ -261,7 +261,7 @@ export default async function ReportsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-3xl font-semibold text-slate-900">
-            {formatCurrency(stats.totalPurchases, "GBP")}
+            {formatCurrency(stats.totalOrders, "GBP")}
           </CardContent>
         </Card>
         <Card className="border-none bg-white/70 shadow-lg shadow-slate-900/5">
@@ -270,7 +270,7 @@ export default async function ReportsPage() {
               Payments Received
             </CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              Collection rate {overallCollectionRate.toFixed(1)}%
+              Remittance rate {overallCollectionRate.toFixed(1)}%
             </CardDescription>
           </CardHeader>
           <CardContent className="text-3xl font-semibold text-slate-900">

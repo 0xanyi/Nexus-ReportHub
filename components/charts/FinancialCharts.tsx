@@ -18,9 +18,9 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface FinancialChartsProps {
-  monthlyData: Array<{ month: string; purchases: number; payments: number }>
+  monthlyData: Array<{ month: string; orders: number; payments: number }>
   productData: Array<{ name: string; value: number; quantity: number }>
-  topChurches: Array<{ name: string; purchases: number; payments: number; balance: number }>
+  topChurches: Array<{ name: string; orders: number; payments: number; balance: number }>
 }
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"]
@@ -28,11 +28,11 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"
 export function FinancialCharts({ monthlyData, productData, topChurches }: FinancialChartsProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      {/* Monthly Purchases vs Payments */}
+      {/* Monthly Orders vs Payments */}
       <Card className="col-span-2">
         <CardHeader>
-          <CardTitle>Monthly Purchases vs Payments</CardTitle>
-          <CardDescription>Track purchases and payments over the last 12 months</CardDescription>
+          <CardTitle>Monthly Orders vs Payments</CardTitle>
+          <CardDescription>Track orders and payments over the last 12 months</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -45,7 +45,7 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
                 contentStyle={{ borderRadius: "8px" }}
               />
               <Legend />
-              <Bar dataKey="purchases" fill="#8884d8" name="Purchases" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="orders" fill="#8884d8" name="Orders" radius={[8, 8, 0, 0]} />
               <Bar dataKey="payments" fill="#82ca9d" name="Payments" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -56,7 +56,7 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
       <Card>
         <CardHeader>
           <CardTitle>Product Distribution</CardTitle>
-          <CardDescription>Breakdown of purchases by product type</CardDescription>
+          <CardDescription>Breakdown of orders by product type</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -84,11 +84,11 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
         </CardContent>
       </Card>
 
-      {/* Top Churches by Purchases */}
+      {/* Top Churches by Orders */}
       <Card>
         <CardHeader>
-          <CardTitle>Top Churches by Purchases</CardTitle>
-          <CardDescription>Churches with highest purchase volumes</CardDescription>
+          <CardTitle>Top Churches by Orders</CardTitle>
+          <CardDescription>Churches with highest order volumes</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -101,7 +101,7 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
                 contentStyle={{ borderRadius: "8px" }}
               />
               <Legend />
-              <Bar dataKey="purchases" fill="#8884d8" name="Purchases" radius={[0, 8, 8, 0]} />
+              <Bar dataKey="orders" fill="#8884d8" name="Orders" radius={[0, 8, 8, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -135,9 +135,9 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
               />
               <Line
                 type="monotone"
-                dataKey="purchases"
+                dataKey="orders"
                 stroke="#8884d8"
-                name="Purchases"
+                name="Orders"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 dot={{ r: 4 }}
