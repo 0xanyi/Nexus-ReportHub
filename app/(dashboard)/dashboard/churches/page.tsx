@@ -43,24 +43,34 @@ export default async function ChurchesPage() {
 
   // Calculate financial data for each church
   const churchesWithFinancials = churches.map((church) => {
-    const totalPurchases = church.transactions.reduce((sum, transaction) => {
+    const totalOrders = church.transactions.reduce((sum, transaction) => {
       return (
         sum +
         transaction.lineItems.reduce((lineSum, item) => lineSum + Number(item.totalAmount), 0)
       )
     }, 0)
 
-    const totalPayments = church.payments.reduce((sum, payment) => sum + Number(payment.amount), 0)
+    // Only PRINTING payments count towards balance
+    const printingPayments = church.payments
+      .filter((p) => p.forPurpose === "PRINTING")
+      .reduce((sum, payment) => sum + Number(payment.amount), 0)
 
-    const balance = totalPayments - totalPurchases
+    // Campaign payments are separate (SPONSORSHIP purpose)
+    const totalCampaigns = church.payments
+      .filter((p) => p.forPurpose === "SPONSORSHIP")
+      .reduce((sum, payment) => sum + Number(payment.amount), 0)
+
+    // Balance = PRINTING payments - Orders (campaigns NOT included)
+    const balance = printingPayments - totalOrders
 
     return {
       id: church.id,
       name: church.name,
       group: church.group,
       _count: church._count,
-      totalPurchases,
-      totalPayments,
+      totalOrders,
+      totalPayments: printingPayments,
+      totalCampaigns,
       balance,
     }
   })

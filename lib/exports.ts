@@ -6,7 +6,7 @@ interface ChurchData {
   name: string
   group: string
   zone: string
-  totalPurchases: number
+  totalOrders: number
   totalPayments: number
   balance: number
   transactions: Array<{
@@ -31,7 +31,7 @@ interface GroupData {
     payments: number
     balance: number
   }>
-  totalPurchases: number
+  totalOrders: number
   totalPayments: number
   totalBalance: number
 }
@@ -54,7 +54,7 @@ export function exportChurchToPDF(data: ChurchData) {
   doc.setFontSize(14)
   doc.text("Financial Summary", 14, 65)
   doc.setFontSize(10)
-  doc.text(`Total Purchases: £${data.totalPurchases.toLocaleString()}`, 14, 73)
+  doc.text(`Total Orders: £${data.totalOrders.toLocaleString()}`, 14, 73)
   doc.text(`Total Payments: £${data.totalPayments.toLocaleString()}`, 14, 80)
   doc.text(
     `Balance: £${Math.abs(data.balance).toLocaleString()} ${data.balance < 0 ? "(Owed)" : "(Credit)"}`,
@@ -125,7 +125,7 @@ export function exportChurchToExcel(data: ChurchData) {
     ["Report Date", new Date().toLocaleDateString()],
     [],
     ["Financial Summary"],
-    ["Total Purchases", data.totalPurchases],
+    ["Total Orders", data.totalOrders],
     ["Total Payments", data.totalPayments],
     ["Balance", data.balance],
     ["Status", data.balance < 0 ? "Owed" : "Credit"],
@@ -178,7 +178,7 @@ export function exportGroupToPDF(data: GroupData) {
   doc.text("Financial Summary", 14, 58)
   doc.setFontSize(10)
   doc.text(`Total Churches: ${data.churches.length}`, 14, 66)
-  doc.text(`Total Purchases: £${data.totalPurchases.toLocaleString()}`, 14, 73)
+  doc.text(`Total Orders: £${data.totalOrders.toLocaleString()}`, 14, 73)
   doc.text(`Total Payments: £${data.totalPayments.toLocaleString()}`, 14, 80)
   doc.text(
     `Total Balance: £${Math.abs(data.totalBalance).toLocaleString()} ${data.totalBalance < 0 ? "(Owed)" : "(Credit)"}`,
@@ -231,7 +231,7 @@ export function exportGroupToExcel(data: GroupData) {
     [],
     ["Financial Summary"],
     ["Total Churches", data.churches.length],
-    ["Total Purchases", data.totalPurchases],
+    ["Total Orders", data.totalOrders],
     ["Total Payments", data.totalPayments],
     ["Total Balance", data.totalBalance],
     ["Status", data.totalBalance < 0 ? "Owed" : "Credit"],

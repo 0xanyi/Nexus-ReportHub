@@ -9,7 +9,7 @@ interface ChurchExportButtonsProps {
     name: string
     group: string
     zone: string
-    totalPurchases: number
+    totalOrders: number
     totalPayments: number
     balance: number
     transactions: Array<{
@@ -37,7 +37,7 @@ interface GroupExportButtonsProps {
       payments: number
       balance: number
     }>
-    totalPurchases: number
+    totalOrders: number
     totalPayments: number
     totalBalance: number
   }
