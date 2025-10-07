@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/utils"
 import Link from "next/link"
 import { CampaignGivingOverview } from "@/components/analytics/CampaignGivingOverview"
 import { PaymentSummaryGenerator } from "@/components/reports/PaymentSummaryGenerator"
+import { getCampaignCategorySummaries } from "@/lib/campaigns"
 
 export default async function ReportsPage() {
   const session = await auth()
@@ -67,8 +68,8 @@ export default async function ReportsPage() {
   // Calculate summary statistics
   const stats = churches.reduce(
     (acc, church) => {
-      // Calculate total purchases
-      const totalPurchases = church.transactions.reduce((sum, transaction) => {
+      // Calculate total orders
+      const totalOrders = church.transactions.reduce((sum, transaction) => {
         const transactionTotal = transaction.lineItems.reduce(
           (lineSum, item) => lineSum + Number(item.totalAmount),
           0
@@ -83,10 +84,10 @@ export default async function ReportsPage() {
       )
 
       // Calculate balance (negative means church owes money)
-      const balance = totalPayments - totalPurchases
+      const balance = totalPayments - totalOrders
 
       acc.totalChurches++
-      acc.totalPurchases += totalPurchases
+      acc.totalOrders += totalOrders
       acc.totalPayments += totalPayments
       
       if (balance < 0) {
@@ -105,7 +106,7 @@ export default async function ReportsPage() {
     },
     {
       totalChurches: 0,
-      totalPurchases: 0,
+      totalOrders: 0,
       totalPayments: 0,
       totalOutstanding: 0,
       totalCopies: 0,
@@ -196,7 +197,7 @@ export default async function ReportsPage() {
   })
 
   const overallCollectionRate =
-    stats.totalPurchases > 0 ? (stats.totalPayments / stats.totalPurchases) * 100 : 0
+    stats.totalOrders > 0 ? (stats.totalPayments / stats.totalOrders) * 100 : 0
 
   // Get zones with groups for payment summary generator
   const zones = await prisma.zone.findMany({
@@ -212,6 +213,12 @@ export default async function ReportsPage() {
     },
   })
 
+  // Get campaign categories for Campaign Giving Overview
+  const campaignCategories = await getCampaignCategorySummaries(department.id)
+
+  // Calculate total campaigns amount
+  const totalCampaigns = campaignCategories.reduce((sum, cat) => sum + cat.totalAmount, 0)
+
   return (
     <div className="space-y-10">
       <div className="flex flex-col gap-3">
@@ -219,7 +226,7 @@ export default async function ReportsPage() {
           Financial Reports
         </h1>
         <p className="text-sm text-slate-500">
-          View consolidated balances, collection rates, and the latest activity across the
+          View consolidated balances, remittance rates, and the latest activity across the
           network. Charts now live inside the dedicated analytics workspace.
         </p>
         <Link
@@ -230,9 +237,7 @@ export default async function ReportsPage() {
         </Link>
       </div>
 
-      <PaymentSummaryGenerator zones={zones} />
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card className="border-none bg-gradient-to-br from-emerald-500/15 via-emerald-400/5 to-teal-500/15 shadow-lg shadow-emerald-500/10">
           <CardHeader className="space-y-3">
             <CardTitle className="text-sm font-medium text-emerald-900">
@@ -249,14 +254,14 @@ export default async function ReportsPage() {
         <Card className="border-none bg-white/70 shadow-lg shadow-slate-900/5">
           <CardHeader className="space-y-3">
             <CardTitle className="text-sm font-medium text-slate-700">
-              Purchase Volume
+              Order Volume
             </CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              {stats.totalCopies.toLocaleString()} copies distributed overall
+              {stats.totalCopies.toLocaleString()} copies ordered overall
             </CardDescription>
           </CardHeader>
           <CardContent className="text-3xl font-semibold text-slate-900">
-            {formatCurrency(stats.totalPurchases, "GBP")}
+            {formatCurrency(stats.totalOrders, "GBP")}
           </CardContent>
         </Card>
         <Card className="border-none bg-white/70 shadow-lg shadow-slate-900/5">
@@ -265,11 +270,24 @@ export default async function ReportsPage() {
               Payments Received
             </CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              Collection rate {overallCollectionRate.toFixed(1)}%
+              Remittance rate {overallCollectionRate.toFixed(1)}%
             </CardDescription>
           </CardHeader>
           <CardContent className="text-3xl font-semibold text-slate-900">
             {formatCurrency(stats.totalPayments, "GBP")}
+          </CardContent>
+        </Card>
+        <Card className="border-none bg-gradient-to-br from-blue-500/15 via-indigo-400/10 to-purple-500/15 shadow-lg shadow-blue-500/10">
+          <CardHeader className="space-y-3">
+            <CardTitle className="text-sm font-medium text-blue-900">
+              Total Campaigns
+            </CardTitle>
+            <CardDescription className="text-xs text-blue-900/70">
+              Sponsorship contributions across all campaigns
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-3xl font-semibold text-blue-900">
+            {formatCurrency(totalCampaigns, "GBP")}
           </CardContent>
         </Card>
         <Card className="border-none bg-gradient-to-br from-rose-500/15 via-rose-400/10 to-orange-500/15 shadow-lg shadow-rose-500/10">
@@ -287,7 +305,9 @@ export default async function ReportsPage() {
         </Card>
       </div>
 
-      <CampaignGivingOverview departmentId={department.id} />
+      <PaymentSummaryGenerator zones={zones} />
+
+      <CampaignGivingOverview categories={campaignCategories} />
 
       <Card className="border-none bg-white/80 shadow-lg shadow-slate-900/5">
         <CardHeader>

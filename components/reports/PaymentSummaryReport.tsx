@@ -61,7 +61,7 @@ export function PaymentSummaryReport({ data }: PaymentSummaryReportProps) {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] border-collapse text-sm">
+          <table className="w-full min-w-[1000px] border-collapse text-sm">
             <thead>
               <tr>
                 <th className="border border-slate-300 bg-sky-100 p-2 text-center font-semibold text-slate-900"></th>
@@ -73,17 +73,16 @@ export function PaymentSummaryReport({ data }: PaymentSummaryReportProps) {
                   PRINT
                 </th>
                 <th
-                  colSpan={4}
+                  colSpan={3}
                   className="border border-slate-300 bg-sky-100 p-2 text-center font-semibold text-slate-900"
                 >
-                  INCOME TOWARDS SPONSORSHIP / PROJECT PAYMENT
+                  SPONSORSHIP / PROJECTS / CAMPAIGNS PAYMENT
                 </th>
-                <th className="border border-slate-300 bg-sky-100 p-2 text-center font-semibold text-slate-900"></th>
                 <th
                   colSpan={2}
                   className="border border-slate-300 bg-sky-100 p-2 text-center font-semibold text-slate-900"
                 >
-                  INCOME FROM THE GROUP LINKS
+                  GROUPS ONLINE CAMPAIGN
                 </th>
               </tr>
               <tr>
@@ -94,44 +93,25 @@ export function PaymentSummaryReport({ data }: PaymentSummaryReportProps) {
                   MONTH
                 </th>
                 <th className="border border-slate-300 bg-sky-100 p-2 text-center text-xs font-medium text-slate-700">
-                  INCOME TOWARDS PRINTS
-                  <br />
                   POUNDS
                 </th>
                 <th className="border border-slate-300 bg-sky-100 p-2 text-center text-xs font-medium text-slate-700">
-                  REACHOUT WORLD PAY PAYMENT
-                  <br />
-                  POUNDS
+                  ESPEES
                 </th>
                 <th className="w-24 border border-slate-300 bg-sky-100 p-2 text-center text-xs font-medium text-slate-700">
-                  ZONE
-                  <br />
-                  POUND
-                  <br />
-                  PAYMENT
+                  POUNDS
                 </th>
                 <th className="w-24 border border-slate-300 bg-sky-100 p-2 text-center text-xs font-medium text-slate-700">
                   NAIRA
-                  <br />
-                  PAYMENT
                 </th>
                 <th className="w-24 border border-slate-300 bg-sky-100 p-2 text-center text-xs font-medium text-slate-700">
                   ESPEES
-                  <br />
-                  PAYMENT
-                </th>
-                <th className="border border-slate-300 bg-sky-100 p-2"></th>
-                <th className="w-28 border border-slate-300 bg-sky-100 p-2 text-center text-xs font-medium text-slate-700">
-                  TOTAL INCOME DEC 24-NOV 2025 (ESPEES)
                 </th>
                 <th className="border border-slate-300 bg-sky-100 p-2 text-center text-xs font-medium text-slate-700">
                   POUNDS
                 </th>
                 <th className="border border-slate-300 bg-sky-100 p-2 text-center text-xs font-medium text-slate-700">
                   ESPEES
-                </th>
-                <th className="border border-slate-300 bg-sky-100 p-2 text-center text-xs font-medium text-slate-700">
-                  COMMENT
                 </th>
               </tr>
             </thead>
@@ -149,8 +129,7 @@ export function PaymentSummaryReport({ data }: PaymentSummaryReportProps) {
                     {formatAmount(month.printIncomePounds)}
                   </td>
                   <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-800">
-                    {month.reachoutWorldPayPounds > 0 && "£"}
-                    {formatAmount(month.reachoutWorldPayPounds)}
+                    {formatAmount(month.printIncomeEspees)}
                   </td>
                   <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-800">
                     {month.zonePoundPayment > 0 && "£"}
@@ -163,17 +142,12 @@ export function PaymentSummaryReport({ data }: PaymentSummaryReportProps) {
                   <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-800">
                     {formatAmount(month.zoneEspeesPayment)}
                   </td>
-                  <td className="border border-slate-300 p-2"></td>
-                  <td className="border border-slate-300 p-2"></td>
                   <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-800">
                     {month.groupLinksPounds > 0 && "£"}
                     {formatAmount(month.groupLinksPounds)}
                   </td>
                   <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-800">
                     {formatAmount(month.groupLinksEspees)}
-                  </td>
-                  <td className="border border-slate-300 p-2 text-sm text-slate-500">
-                    {month.comment || ""}
                   </td>
                 </tr>
               ))}
@@ -184,8 +158,7 @@ export function PaymentSummaryReport({ data }: PaymentSummaryReportProps) {
                   £ {formatAmount(data.totals.printIncomePounds, true)}
                 </td>
                 <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
-                  {data.totals.reachoutWorldPayPounds > 0 && "£"}
-                  {formatAmount(data.totals.reachoutWorldPayPounds, true)}
+                  {formatAmount(data.totals.printIncomeEspees, true)}
                 </td>
                 <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
                   £ {formatAmount(data.totals.zonePoundPayment, true)}
@@ -196,45 +169,39 @@ export function PaymentSummaryReport({ data }: PaymentSummaryReportProps) {
                 <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
                   {formatAmount(data.totals.zoneEspeesPayment, true)}
                 </td>
-                <td className="border border-slate-300 p-2"></td>
-                <td className="border border-slate-300 p-2"></td>
                 <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
                   £ {formatAmount(data.totals.groupLinksPounds, true)}
                 </td>
                 <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
                   {formatAmount(data.totals.groupLinksEspees, true)}
                 </td>
-                <td className="border border-slate-300 p-2"></td>
               </tr>
               <tr className="bg-slate-100 font-bold">
                 <td className="border border-slate-300 p-2"></td>
                 <td className="border border-slate-300 p-2 text-center text-slate-900">
                   GRAND TOTAL :
                 </td>
-                <td
-                  colSpan={2}
-                  className="border border-slate-300 p-2 text-right tabular-nums text-slate-900"
-                >
-                  £ {formatAmount(data.grandTotal.pounds, true)}
+                <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
+                  £ {formatAmount(data.totals.printIncomePounds, true)}
                 </td>
                 <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
-                  £
+                  {formatAmount(data.totals.printIncomeEspees, true)}
                 </td>
                 <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
-                  ₦ {formatAmount(data.grandTotal.naira, true)}
+                  £ {formatAmount(data.totals.zonePoundPayment, true)}
                 </td>
                 <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
-                  {formatAmount(data.grandTotal.espees, true)}
-                </td>
-                <td className="border border-slate-300 p-2"></td>
-                <td className="border border-slate-300 p-2"></td>
-                <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
-                  £
+                  ₦ {formatAmount(data.totals.zoneNairaPayment, true)}
                 </td>
                 <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
-                  ₦
+                  {formatAmount(data.totals.zoneEspeesPayment, true)}
                 </td>
-                <td className="border border-slate-300 p-2"></td>
+                <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
+                  £ {formatAmount(data.totals.groupLinksPounds, true)}
+                </td>
+                <td className="border border-slate-300 p-2 text-right tabular-nums text-slate-900">
+                  {formatAmount(data.totals.groupLinksEspees, true)}
+                </td>
               </tr>
             </tbody>
           </table>

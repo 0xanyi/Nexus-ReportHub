@@ -149,11 +149,11 @@ export default async function AnalyticsPage({
   } = comparisonData
 
   // Calculate totals
-  const currentYearPurchases = currentTransactions.reduce((sum, t) => {
+  const currentYearOrders = currentTransactions.reduce((sum, t) => {
     return sum + t.lineItems.reduce((lineSum, item) => lineSum + Number(item.totalAmount), 0)
   }, 0)
 
-  const lastYearPurchases = compareTransactions.reduce((sum, t) => {
+  const lastYearOrders = compareTransactions.reduce((sum, t) => {
     return sum + t.lineItems.reduce((lineSum, item) => lineSum + Number(item.totalAmount), 0)
   }, 0)
 
@@ -165,14 +165,14 @@ export default async function AnalyticsPage({
 
   // Calculate collection rates
   const currentCollectionRate =
-    currentYearPurchases > 0 ? (currentYearPaymentsTotal / currentYearPurchases) * 100 : 0
+    currentYearOrders > 0 ? (currentYearPaymentsTotal / currentYearOrders) * 100 : 0
   const lastCollectionRate =
-    lastYearPurchases > 0 ? (lastYearPaymentsTotal / lastYearPurchases) * 100 : 0
+    lastYearOrders > 0 ? (lastYearPaymentsTotal / lastYearOrders) * 100 : 0
 
   // Calculate growth rates
-  const purchaseGrowth =
-    lastYearPurchases > 0
-      ? ((currentYearPurchases - lastYearPurchases) / lastYearPurchases) * 100
+  const orderGrowth =
+    lastYearOrders > 0
+      ? ((currentYearOrders - lastYearOrders) / lastYearOrders) * 100
       : 0
   const paymentGrowth =
     lastYearPaymentsTotal > 0
@@ -191,7 +191,7 @@ export default async function AnalyticsPage({
       (p) => new Date(p.paymentDate).getMonth() === i
     )
 
-    const currentPurchases = currentMonthTransactions.reduce((sum, t) => {
+    const currentOrders = currentMonthTransactions.reduce((sum, t) => {
       return sum + t.lineItems.reduce((lineSum, item) => lineSum + Number(item.totalAmount), 0)
     }, 0)
 
@@ -208,7 +208,7 @@ export default async function AnalyticsPage({
       (p) => new Date(p.paymentDate).getMonth() === i
     )
 
-    const lastPurchases = lastMonthTransactions.reduce((sum, t) => {
+    const lastOrders = lastMonthTransactions.reduce((sum, t) => {
       return sum + t.lineItems.reduce((lineSum, item) => lineSum + Number(item.totalAmount), 0)
     }, 0)
 
@@ -216,11 +216,11 @@ export default async function AnalyticsPage({
 
     return {
       month,
-      currentPurchases: Math.round(currentPurchases),
+      currentOrders: Math.round(currentOrders),
       currentPayments: Math.round(currentPaymentsAmount),
-      lastPurchases: Math.round(lastPurchases),
+      lastOrders: Math.round(lastOrders),
       lastPayments: Math.round(lastPaymentsAmount),
-      collectionRate: currentPurchases > 0 ? (currentPaymentsAmount / currentPurchases) * 100 : 0,
+      collectionRate: currentOrders > 0 ? (currentPaymentsAmount / currentOrders) * 100 : 0,
     }
   })
 
@@ -239,24 +239,24 @@ export default async function AnalyticsPage({
 
   const churchPerformance = churches
     .map((church) => {
-      const totalPurchases = church.transactions.reduce((sum, t) => {
+      const totalOrders = church.transactions.reduce((sum, t) => {
         return sum + t.lineItems.reduce((lineSum, item) => lineSum + Number(item.totalAmount), 0)
       }, 0)
 
       const totalPayments = church.payments.reduce((sum, p) => sum + Number(p.amount), 0)
 
-      const collectionRate = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0
+      const collectionRate = totalOrders > 0 ? (totalPayments / totalOrders) * 100 : 0
 
       return {
         name: church.name,
         group: church.group.name,
-        totalPurchases,
+        totalOrders,
         totalPayments,
         collectionRate,
         transactionCount: church.transactions.length,
       }
     })
-    .filter((c) => c.totalPurchases > 0)
+    .filter((c) => c.totalOrders > 0)
     .sort((a, b) => b.collectionRate - a.collectionRate)
 
   // Group performance
@@ -276,7 +276,7 @@ export default async function AnalyticsPage({
   })
 
   const groupData = groupPerformance.map((group) => {
-    const totalPurchases = group.churches.reduce((sum, church) => {
+    const totalOrders = group.churches.reduce((sum, church) => {
       return (
         sum +
         church.transactions.reduce((tSum, t) => {
@@ -291,9 +291,9 @@ export default async function AnalyticsPage({
 
     return {
       name: group.name,
-      totalPurchases: Math.round(totalPurchases),
+      totalOrders: Math.round(totalOrders),
       totalPayments: Math.round(totalPayments),
-      collectionRate: totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0,
+      collectionRate: totalOrders > 0 ? (totalPayments / totalOrders) * 100 : 0,
       churchCount: group.churches.length,
     }
   })
@@ -303,7 +303,7 @@ export default async function AnalyticsPage({
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Advanced Analytics</h2>
         <p className="text-muted-foreground">
-          In-depth analysis of purchases, payments, and collection trends
+          In-depth analysis of orders, payments, and collection trends
         </p>
       </div>
 
@@ -315,21 +315,21 @@ export default async function AnalyticsPage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              {typeof currentPeriod.label === 'string' ? currentPeriod.label : `${currentPeriod.from} to ${currentPeriod.to}`} Purchases
+              {typeof currentPeriod.label === 'string' ? currentPeriod.label : `${currentPeriod.from} to ${currentPeriod.to}`} Orders
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(currentYearPurchases, "GBP")}
+              {formatCurrency(currentYearOrders, "GBP")}
             </div>
             {compareTransactions.length > 0 && (
               <p
                 className={`text-xs ${
-                  purchaseGrowth >= 0 ? "text-green-600" : "text-destructive"
+                  orderGrowth >= 0 ? "text-green-600" : "text-destructive"
                 }`}
               >
-                {purchaseGrowth >= 0 ? "+" : ""}
-                {purchaseGrowth.toFixed(1)}% vs {comparePeriod.label}
+                {orderGrowth >= 0 ? "+" : ""}
+                {orderGrowth.toFixed(1)}% vs {comparePeriod.label}
               </p>
             )}
           </CardContent>
@@ -358,7 +358,7 @@ export default async function AnalyticsPage({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Collection Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">Remittance Rate</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{currentCollectionRate.toFixed(1)}%</div>
@@ -381,7 +381,7 @@ export default async function AnalyticsPage({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
-              {formatCurrency(currentYearPurchases - currentYearPaymentsTotal, "GBP")}
+              {formatCurrency(currentYearOrders - currentYearPaymentsTotal, "GBP")}
             </div>
             <p className="text-xs text-muted-foreground">Current year balance</p>
           </CardContent>

@@ -33,7 +33,7 @@ interface GroupExportButtonsProps {
     zone: string
     churches: Array<{
       name: string
-      purchases: number
+      orders: number
       payments: number
       balance: number
     }>

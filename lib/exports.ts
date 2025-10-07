@@ -28,7 +28,7 @@ interface GroupData {
   zone: string
   churches: Array<{
     name: string
-    purchases: number
+    orders: number
     payments: number
     balance: number
   }>
@@ -190,10 +190,10 @@ export function exportGroupToPDF(data: GroupData) {
   // Churches Table
   autoTable(doc, {
     startY: 95,
-    head: [["Church", "Purchases", "Payments", "Balance", "Status"]],
+    head: [["Church", "Orders", "Payments", "Balance", "Status"]],
     body: data.churches.map((c) => [
       c.name,
-      `£${c.purchases.toLocaleString()}`,
+      `£${c.orders.toLocaleString()}`,
       `£${c.payments.toLocaleString()}`,
       `£${Math.abs(c.balance).toLocaleString()}`,
       c.balance < 0 ? "Owed" : "Credit",
@@ -242,10 +242,10 @@ export function exportGroupToExcel(data: GroupData) {
   
   // Churches Sheet
   const churchesData = [
-    ["Church", "Purchases", "Payments", "Balance", "Status"],
+    ["Church", "Orders", "Payments", "Balance", "Status"],
     ...data.churches.map((c) => [
       c.name,
-      c.purchases,
+      c.orders,
       c.payments,
       Math.abs(c.balance),
       c.balance < 0 ? "Owed" : "Credit",
@@ -279,18 +279,15 @@ export function exportPaymentSummaryToPDF(data: PaymentSummaryData) {
       { content: "S/N", rowSpan: 2 },
       { content: "MONTH", rowSpan: 2 },
       { content: "PRINT", colSpan: 2 },
-      { content: "INCOME TOWARDS SPONSORSHIP / PROJECT PAYMENT", colSpan: 4 },
-      { content: "" },
-      { content: "INCOME FROM THE GROUP LINKS", colSpan: 2 },
-      { content: "COMMENT", rowSpan: 2 },
+      { content: "SPONSORSHIP / PROJECTS / CAMPAIGNS PAYMENT", colSpan: 3 },
+      { content: "GROUPS ONLINE CAMPAIGN", colSpan: 2 },
     ],
     [
-      "INCOME TOWARDS PRINTS\nPOUNDS",
-      "REACHOUT WORLD\nPAY PAYMENT\nPOUNDS",
-      "ZONE\nPOUND\nPAYMENT",
-      "NAIRA\nPAYMENT",
-      "ESPEES\nPAYMENT",
-      "",
+      "POUNDS",
+      "ESPEES",
+      "POUNDS",
+      "NAIRA",
+      "ESPEES",
       "POUNDS",
       "ESPEES",
     ],
@@ -299,43 +296,36 @@ export function exportPaymentSummaryToPDF(data: PaymentSummaryData) {
       (index + 1).toString(),
       month.monthName,
       month.printIncomePounds > 0 ? `£${month.printIncomePounds.toLocaleString()}` : "",
-      month.reachoutWorldPayPounds > 0 ? `£${month.reachoutWorldPayPounds.toLocaleString()}` : "",
+      month.printIncomeEspees > 0 ? month.printIncomeEspees.toLocaleString() : "",
       month.zonePoundPayment > 0 ? `£${month.zonePoundPayment.toLocaleString()}` : "",
       month.zoneNairaPayment > 0 ? `₦${month.zoneNairaPayment.toLocaleString()}` : "",
       month.zoneEspeesPayment > 0 ? month.zoneEspeesPayment.toLocaleString() : "",
-      "",
       month.groupLinksPounds > 0 ? `£${month.groupLinksPounds.toLocaleString()}` : "",
       month.groupLinksEspees > 0 ? month.groupLinksEspees.toLocaleString() : "",
-      month.comment || "",
     ]),
     // Total row
     [
       "",
       "TOTAL",
       `£${data.totals.printIncomePounds.toLocaleString()}`,
-      data.totals.reachoutWorldPayPounds > 0 
-        ? `£${data.totals.reachoutWorldPayPounds.toLocaleString()}` 
-        : "",
+      data.totals.printIncomeEspees.toLocaleString(),
       `£${data.totals.zonePoundPayment.toLocaleString()}`,
       `₦${data.totals.zoneNairaPayment.toLocaleString()}`,
       data.totals.zoneEspeesPayment.toLocaleString(),
-      "",
       `£${data.totals.groupLinksPounds.toLocaleString()}`,
       data.totals.groupLinksEspees.toLocaleString(),
-      "",
     ],
     // Grand total row
     [
       "",
       "GRAND TOTAL:",
-      { content: `£${data.grandTotal.pounds.toLocaleString()}`, colSpan: 2 },
-      "£",
-      `₦${data.grandTotal.naira.toLocaleString()}`,
-      data.grandTotal.espees.toLocaleString(),
-      "",
-      "£",
-      "₦",
-      "",
+      `£${data.totals.printIncomePounds.toLocaleString()}`,
+      data.totals.printIncomeEspees.toLocaleString(),
+      `£${data.totals.zonePoundPayment.toLocaleString()}`,
+      `₦${data.totals.zoneNairaPayment.toLocaleString()}`,
+      data.totals.zoneEspeesPayment.toLocaleString(),
+      `£${data.totals.groupLinksPounds.toLocaleString()}`,
+      data.totals.groupLinksEspees.toLocaleString(),
     ],
   ]
   
@@ -357,7 +347,6 @@ export function exportPaymentSummaryToPDF(data: PaymentSummaryData) {
     columnStyles: {
       0: { halign: "center", cellWidth: 10 },
       1: { halign: "center", cellWidth: 25 },
-      10: { halign: "left", cellWidth: 25 },
     },
     didParseCell: (data) => {
       // Bold the total and grand total rows
@@ -393,49 +382,40 @@ export function exportPaymentSummaryToExcel(data: PaymentSummaryData) {
   const excelData = [
     [data.title],
     [],
-    ["S/N", "MONTH", "PRINT", "", "INCOME TOWARDS SPONSORSHIP / PROJECT PAYMENT", "", "", "", "", "INCOME FROM THE GROUP LINKS", "", "COMMENT"],
-    ["", "", "INCOME TOWARDS PRINTS (POUNDS)", "REACHOUT WORLD PAY PAYMENT (POUNDS)", "ZONE POUND PAYMENT", "NAIRA PAYMENT", "ESPEES PAYMENT", "", "", "POUNDS", "ESPEES", ""],
+    ["S/N", "MONTH", "PRINT", "", "SPONSORSHIP / PROJECTS / CAMPAIGNS PAYMENT", "", "", "GROUPS ONLINE CAMPAIGN", ""],
+    ["", "", "POUNDS", "ESPEES", "POUNDS", "NAIRA", "ESPEES", "POUNDS", "ESPEES"],
     ...data.months.map((month, index) => [
       index + 1,
       month.monthName,
       month.printIncomePounds || "",
-      month.reachoutWorldPayPounds || "",
+      month.printIncomeEspees || "",
       month.zonePoundPayment || "",
       month.zoneNairaPayment || "",
       month.zoneEspeesPayment || "",
-      "",
-      "",
       month.groupLinksPounds || "",
       month.groupLinksEspees || "",
-      month.comment || "",
     ]),
     [
       "",
       "TOTAL",
       data.totals.printIncomePounds,
-      data.totals.reachoutWorldPayPounds,
+      data.totals.printIncomeEspees,
       data.totals.zonePoundPayment,
       data.totals.zoneNairaPayment,
       data.totals.zoneEspeesPayment,
-      "",
-      "",
       data.totals.groupLinksPounds,
       data.totals.groupLinksEspees,
-      "",
     ],
     [
       "",
       "GRAND TOTAL:",
-      data.grandTotal.pounds,
-      "",
-      "",
-      data.grandTotal.naira,
-      data.grandTotal.espees,
-      "",
-      "",
-      "",
-      "",
-      "",
+      data.totals.printIncomePounds,
+      data.totals.printIncomeEspees,
+      data.totals.zonePoundPayment,
+      data.totals.zoneNairaPayment,
+      data.totals.zoneEspeesPayment,
+      data.totals.groupLinksPounds,
+      data.totals.groupLinksEspees,
     ],
   ]
   
@@ -450,11 +430,8 @@ export function exportPaymentSummaryToExcel(data: PaymentSummaryData) {
     { wch: 15 },  // Zone Pound
     { wch: 15 },  // Naira
     { wch: 15 },  // Espees
-    { wch: 5 },   // Empty
-    { wch: 5 },   // Empty
     { wch: 15 },  // Group Links Pounds
     { wch: 15 },  // Group Links Espees
-    { wch: 20 },  // Comment
   ]
   
   XLSX.utils.book_append_sheet(workbook, worksheet, "Payment Summary")
