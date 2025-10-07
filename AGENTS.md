@@ -34,7 +34,9 @@ All other scripts wrap these core tasks.
 │  │  └─ FinancialCharts.tsx → Financial charts (bar, line, pie)
 │  ├─ churches/             → Church-specific components
 │  │  ├─ BulkUpload.tsx     → Bulk church CSV upload modal
-│  │  └─ CampaignBreakdown.tsx → Campaign contributions with date range filters
+│  │  ├─ CampaignBreakdown.tsx → Campaign contributions with date range filters
+│  │  ├─ OrderForm.tsx      → Manual order creation/editing dialog
+│  │  └─ ChurchOrdersManager.tsx → Order management wrapper component
 │  ├─ users/                → User management components
 │  │  └─ UserList.tsx       → User table with search, filter, delete
 │  ├─ ui/                   → Reusable UI components (Button, Input, Card, Dialog, etc.)
@@ -248,7 +250,19 @@ A pull request is reviewable when it includes:
    - Supports variable product sets across different months and churches
    - **Flexible Department Lookup**: Uses first available department if user has no assignment
 
-5. **Financial Reports**
+5. **Manual Order Management** (Admin Only)
+   - **Manual Order Creation**: Add orders directly from church detail pages
+   - **Order Editing**: Modify existing orders (date, products, quantities, notes)
+   - **Order Deletion**: Remove orders with confirmation dialog
+   - **Multi-Product Support**: Add multiple products to single orders
+   - **Real-time Calculations**: Automatic total computation as products are added/removed
+   - **Product Selection**: Dropdown populated from existing product catalog
+   - **Admin-only Access**: Only SUPER_ADMIN and ZONE_ADMIN can manage orders
+   - **Order History Integration**: Edit/delete buttons in transaction history
+   - **Form Validation**: Client and server-side validation with error handling
+   - **Responsive Design**: Works on mobile, tablet, and desktop
+
+6. **Financial Reports**
    - **Dashboard Overview**: Summary cards with key metrics
    - **Visual Charts**: Monthly trends, product distribution, top churches (Recharts)
    - **Church Financial Summary**: Complete table with purchases, payments, balances
@@ -419,7 +433,19 @@ A pull request is reviewable when it includes:
 
 ## Recent Fixes & Improvements (October 2025)
 
-### Campaign & Upload Enhancements
+### Manual Order Management System
+- ✅ **Manual Order Creation** - Add orders directly from church detail pages with multiple products
+- ✅ **Order Editing** - Modify existing orders (date, products, quantities, notes)
+- ✅ **Order Deletion** - Remove orders with confirmation dialog
+- ✅ **Multi-Product Support** - Add multiple products to single orders with real-time calculations
+- ✅ **Admin-only Access** - Only SUPER_ADMIN and ZONE_ADMIN can create/edit/delete orders
+- ✅ **Order History Integration** - Edit/delete buttons in transaction history
+- ✅ **Form Validation** - Client and server-side validation with error handling
+- ✅ **Responsive Design** - Works on mobile, tablet, and desktop
+- ✅ **API Endpoints** - Full REST API for order operations (`/api/transactions`, `/api/transactions/[id]`)
+- ✅ **UI Components** - OrderForm dialog and ChurchOrdersManager wrapper component
+
+## Recent Fixes & Improvements (January 2026)
 - ✅ Added dual CSV upload modes for bank transactions and monthly orders with contextual validation
 - ✅ Auto-generate and persist campaign categories when transaction types repeat across uploads
 - ✅ Extended upload history with upload type, processed summaries, and category creation counts

@@ -6,17 +6,20 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { Decimal } from "@prisma/client/runtime/library"
+import { Edit, Trash2 } from "lucide-react"
 
 interface Transaction {
   id: string
   transactionDate: Date
   currency: string
+  notes?: string | null
   lineItems: Array<{
     id: string
     quantity: number
     unitPrice: number | string | Decimal
     totalAmount: number | string | Decimal
     productType: {
+      id: string
       name: string
     }
   }>
@@ -33,18 +36,40 @@ interface TransactionHistoryProps {
   transactions: Transaction[]
   currency?: string
   showChurchColumn?: boolean
+  onEdit?: (transaction: Transaction) => void
+  onDelete?: (transactionId: string) => void
+  isAdmin?: boolean
 }
 
 export function TransactionHistory({ 
   transactions, 
   currency: defaultCurrency = "GBP",
-  showChurchColumn = false 
+  showChurchColumn = false,
+  onEdit,
+  onDelete,
+  isAdmin = false
 }: TransactionHistoryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedMonth, setSelectedMonth] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const itemsPerPage = 10
+
+  const handleDelete = async (transactionId: string) => {
+    if (!confirm("Are you sure you want to delete this order? This action cannot be undone.")) {
+      return
+    }
+
+    setDeletingId(transactionId)
+    try {
+      if (onDelete) {
+        await onDelete(transactionId)
+      }
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   // Get unique years from transactions
   const years = useMemo(() => {
@@ -188,7 +213,7 @@ export function TransactionHistory({
               <div key={transaction.id} className="p-4 border rounded-lg space-y-3">
                 {/* Transaction Header */}
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="flex-1">
                     {showChurchColumn && transaction.church && (
                       <div className="font-medium text-slate-900">{transaction.church.name}</div>
                     )}
@@ -196,17 +221,45 @@ export function TransactionHistory({
                     <div className="text-sm text-muted-foreground">
                       Uploaded by {transaction.uploader.name}
                     </div>
+                    {transaction.notes && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Note: {transaction.notes}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold">
-                      {formatCurrency(
-                        transaction.lineItems.reduce(
-                          (sum, item) => sum + Number(item.totalAmount),
-                          0
-                        ),
-                        defaultCurrency
-                      )}
+                  <div className="text-right flex items-start gap-2">
+                    <div>
+                      <div className="text-lg font-bold">
+                        {formatCurrency(
+                          transaction.lineItems.reduce(
+                            (sum, item) => sum + Number(item.totalAmount),
+                            0
+                          ),
+                          defaultCurrency
+                        )}
+                      </div>
                     </div>
+                    {isAdmin && onEdit && onDelete && (
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(transaction)}
+                          title="Edit order"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(transaction.id)}
+                          disabled={deletingId === transaction.id}
+                          title="Delete order"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { formatCurrency, formatDate } from "@/lib/utils"
 import Link from "next/link"
 import { ExportButtons } from "@/components/ExportButtons"
-import { TransactionHistory } from "@/components/TransactionHistory"
 import { PaymentHistory } from "@/components/PaymentHistory"
 import { CampaignBreakdown } from "@/components/churches/CampaignBreakdown"
+import { ChurchOrdersManager } from "@/components/churches/ChurchOrdersManager"
 
 export default async function ChurchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -305,8 +305,10 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
         </Card>
       )}
 
-      {/* Enhanced Transaction History with Filtering */}
-      <TransactionHistory 
+      {/* Enhanced Transaction History with Order Management */}
+      <ChurchOrdersManager
+        churchId={church.id}
+        churchName={church.name}
         transactions={church.transactions.map(t => ({
           ...t,
           lineItems: t.lineItems.map(item => ({
@@ -318,7 +320,8 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
               unitPrice: Number(item.productType.unitPrice),
             },
           })),
-        }))} 
+        }))}
+        isAdmin={isAdmin}
       />
 
       {/* Enhanced Payment History with Filtering */}
