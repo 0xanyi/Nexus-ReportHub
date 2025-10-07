@@ -23,13 +23,23 @@ interface Transaction {
   uploader: {
     name: string
   }
+  church?: {
+    id: string
+    name: string
+  }
 }
 
 interface TransactionHistoryProps {
   transactions: Transaction[]
+  currency?: string
+  showChurchColumn?: boolean
 }
 
-export function TransactionHistory({ transactions }: TransactionHistoryProps) {
+export function TransactionHistory({ 
+  transactions, 
+  currency: defaultCurrency = "GBP",
+  showChurchColumn = false 
+}: TransactionHistoryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedMonth, setSelectedMonth] = useState<string>("all")
@@ -179,6 +189,9 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
                 {/* Transaction Header */}
                 <div className="flex items-start justify-between">
                   <div>
+                    {showChurchColumn && transaction.church && (
+                      <div className="font-medium text-slate-900">{transaction.church.name}</div>
+                    )}
                     <div className="font-semibold">{formatDate(transaction.transactionDate)}</div>
                     <div className="text-sm text-muted-foreground">
                       Uploaded by {transaction.uploader.name}
@@ -191,7 +204,7 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
                           (sum, item) => sum + Number(item.totalAmount),
                           0
                         ),
-                        transaction.currency
+                        defaultCurrency
                       )}
                     </div>
                   </div>

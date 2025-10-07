@@ -1,6 +1,7 @@
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
+import { PaymentSummaryData } from "./payment-summary"
 
 interface ChurchData {
   name: string
@@ -258,4 +259,207 @@ export function exportGroupToExcel(data: GroupData) {
     workbook,
     `${data.name.replace(/ /g, "_")}_Group_Report_${new Date().toISOString().split("T")[0]}.xlsx`
   )
+}
+
+export function exportPaymentSummaryToPDF(data: PaymentSummaryData) {
+  const doc = new jsPDF("landscape", "mm", "a3")
+  
+  // Title
+  doc.setFontSize(16)
+  doc.text(data.title, doc.internal.pageSize.getWidth() / 2, 15, { align: "center" })
+  
+  // Report Info
+  doc.setFontSize(10)
+  doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 25)
+  
+  // Main table
+  const tableData = [
+    // Header rows
+    [
+      { content: "S/N", rowSpan: 2 },
+      { content: "MONTH", rowSpan: 2 },
+      { content: "PRINT", colSpan: 2 },
+      { content: "INCOME TOWARDS SPONSORSHIP / PROJECT PAYMENT", colSpan: 4 },
+      { content: "" },
+      { content: "INCOME FROM THE GROUP LINKS", colSpan: 2 },
+      { content: "COMMENT", rowSpan: 2 },
+    ],
+    [
+      "INCOME TOWARDS PRINTS\nPOUNDS",
+      "REACHOUT WORLD\nPAY PAYMENT\nPOUNDS",
+      "ZONE\nPOUND\nPAYMENT",
+      "NAIRA\nPAYMENT",
+      "ESPEES\nPAYMENT",
+      "",
+      "POUNDS",
+      "ESPEES",
+    ],
+    // Data rows
+    ...data.months.map((month, index) => [
+      (index + 1).toString(),
+      month.monthName,
+      month.printIncomePounds > 0 ? `£${month.printIncomePounds.toLocaleString()}` : "",
+      month.reachoutWorldPayPounds > 0 ? `£${month.reachoutWorldPayPounds.toLocaleString()}` : "",
+      month.zonePoundPayment > 0 ? `£${month.zonePoundPayment.toLocaleString()}` : "",
+      month.zoneNairaPayment > 0 ? `₦${month.zoneNairaPayment.toLocaleString()}` : "",
+      month.zoneEspeesPayment > 0 ? month.zoneEspeesPayment.toLocaleString() : "",
+      "",
+      month.groupLinksPounds > 0 ? `£${month.groupLinksPounds.toLocaleString()}` : "",
+      month.groupLinksEspees > 0 ? month.groupLinksEspees.toLocaleString() : "",
+      month.comment || "",
+    ]),
+    // Total row
+    [
+      "",
+      "TOTAL",
+      `£${data.totals.printIncomePounds.toLocaleString()}`,
+      data.totals.reachoutWorldPayPounds > 0 
+        ? `£${data.totals.reachoutWorldPayPounds.toLocaleString()}` 
+        : "",
+      `£${data.totals.zonePoundPayment.toLocaleString()}`,
+      `₦${data.totals.zoneNairaPayment.toLocaleString()}`,
+      data.totals.zoneEspeesPayment.toLocaleString(),
+      "",
+      `£${data.totals.groupLinksPounds.toLocaleString()}`,
+      data.totals.groupLinksEspees.toLocaleString(),
+      "",
+    ],
+    // Grand total row
+    [
+      "",
+      "GRAND TOTAL:",
+      { content: `£${data.grandTotal.pounds.toLocaleString()}`, colSpan: 2 },
+      "£",
+      `₦${data.grandTotal.naira.toLocaleString()}`,
+      data.grandTotal.espees.toLocaleString(),
+      "",
+      "£",
+      "₦",
+      "",
+    ],
+  ]
+  
+  autoTable(doc, {
+    startY: 30,
+    head: tableData.slice(0, 2),
+    body: tableData.slice(2),
+    theme: "grid",
+    headStyles: { 
+      fillColor: [135, 206, 235],
+      textColor: [0, 0, 0],
+      fontSize: 8,
+      halign: "center",
+    },
+    bodyStyles: {
+      fontSize: 7,
+      halign: "right",
+    },
+    columnStyles: {
+      0: { halign: "center", cellWidth: 10 },
+      1: { halign: "center", cellWidth: 25 },
+      10: { halign: "left", cellWidth: 25 },
+    },
+    didParseCell: (data) => {
+      // Bold the total and grand total rows
+      if (data.section === "body" && data.row.index >= tableData.length - 4) {
+        data.cell.styles.fontStyle = "bold"
+        data.cell.styles.fillColor = [240, 240, 240]
+      }
+    },
+  })
+  
+  // Footer
+  const pageCount = doc.getNumberOfPages()
+  doc.setFontSize(8)
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i)
+    doc.text(
+      `Page ${i} of ${pageCount}`,
+      doc.internal.pageSize.getWidth() / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: "center" }
+    )
+  }
+  
+  // Save
+  const filename = data.title.replace(/[^a-z0-9]/gi, "_")
+  doc.save(`${filename}_${new Date().toISOString().split("T")[0]}.pdf`)
+}
+
+export function exportPaymentSummaryToExcel(data: PaymentSummaryData) {
+  const workbook = XLSX.utils.book_new()
+  
+  // Create data array
+  const excelData = [
+    [data.title],
+    [],
+    ["S/N", "MONTH", "PRINT", "", "INCOME TOWARDS SPONSORSHIP / PROJECT PAYMENT", "", "", "", "", "INCOME FROM THE GROUP LINKS", "", "COMMENT"],
+    ["", "", "INCOME TOWARDS PRINTS (POUNDS)", "REACHOUT WORLD PAY PAYMENT (POUNDS)", "ZONE POUND PAYMENT", "NAIRA PAYMENT", "ESPEES PAYMENT", "", "", "POUNDS", "ESPEES", ""],
+    ...data.months.map((month, index) => [
+      index + 1,
+      month.monthName,
+      month.printIncomePounds || "",
+      month.reachoutWorldPayPounds || "",
+      month.zonePoundPayment || "",
+      month.zoneNairaPayment || "",
+      month.zoneEspeesPayment || "",
+      "",
+      "",
+      month.groupLinksPounds || "",
+      month.groupLinksEspees || "",
+      month.comment || "",
+    ]),
+    [
+      "",
+      "TOTAL",
+      data.totals.printIncomePounds,
+      data.totals.reachoutWorldPayPounds,
+      data.totals.zonePoundPayment,
+      data.totals.zoneNairaPayment,
+      data.totals.zoneEspeesPayment,
+      "",
+      "",
+      data.totals.groupLinksPounds,
+      data.totals.groupLinksEspees,
+      "",
+    ],
+    [
+      "",
+      "GRAND TOTAL:",
+      data.grandTotal.pounds,
+      "",
+      "",
+      data.grandTotal.naira,
+      data.grandTotal.espees,
+      "",
+      "",
+      "",
+      "",
+      "",
+    ],
+  ]
+  
+  const worksheet = XLSX.utils.aoa_to_sheet(excelData)
+  
+  // Set column widths
+  worksheet["!cols"] = [
+    { wch: 5 },   // S/N
+    { wch: 15 },  // Month
+    { wch: 15 },  // Print Income
+    { wch: 20 },  // Reachout World
+    { wch: 15 },  // Zone Pound
+    { wch: 15 },  // Naira
+    { wch: 15 },  // Espees
+    { wch: 5 },   // Empty
+    { wch: 5 },   // Empty
+    { wch: 15 },  // Group Links Pounds
+    { wch: 15 },  // Group Links Espees
+    { wch: 20 },  // Comment
+  ]
+  
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Payment Summary")
+  
+  // Save
+  const filename = data.title.replace(/[^a-z0-9]/gi, "_")
+  XLSX.writeFile(workbook, `${filename}_${new Date().toISOString().split("T")[0]}.xlsx`)
 }

@@ -25,11 +25,22 @@ type Payment = {
 interface CampaignBreakdownProps {
   payments: Payment[]
   currency?: string
+  zoneCurrency?: string
+  title?: string
+  description?: string
 }
 
 type DateRange = "all" | "year" | "quarter" | "month"
 
-export function CampaignBreakdown({ payments, currency = "GBP" }: CampaignBreakdownProps) {
+export function CampaignBreakdown({ 
+  payments, 
+  currency, 
+  zoneCurrency = "GBP",
+  title = "Campaign Breakdown",
+  description = "Monthly contributions per campaign category"
+}: CampaignBreakdownProps) {
+  // Use zoneCurrency if currency is not provided
+  const displayCurrency = currency || zoneCurrency
   const [dateRange, setDateRange] = useState<DateRange>("year")
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
   const [selectedQuarter, setSelectedQuarter] = useState<number>(1)
@@ -149,10 +160,8 @@ export function CampaignBreakdown({ payments, currency = "GBP" }: CampaignBreakd
       {/* Date Range Filter */}
       <Card>
         <CardHeader>
-          <CardTitle>Campaign Contributions - {getDateRangeLabel()}</CardTitle>
-          <CardDescription>
-            View campaign sponsorships and contributions by date range
-          </CardDescription>
+          <CardTitle>{title} - {getDateRangeLabel()}</CardTitle>
+          <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
@@ -247,7 +256,7 @@ export function CampaignBreakdown({ payments, currency = "GBP" }: CampaignBreakd
             <CardHeader>
               <CardTitle className="text-lg">{campaignName}</CardTitle>
               <CardDescription>
-                Total: {formatCurrency(total, currency)} •{" "}
+                Total: {formatCurrency(total, displayCurrency)} •{" "}
                 {Array.from(monthlyData.values()).length} months
               </CardDescription>
             </CardHeader>
@@ -265,13 +274,13 @@ export function CampaignBreakdown({ payments, currency = "GBP" }: CampaignBreakd
                       <tr key={month} className="border-b hover:bg-muted/50">
                         <td className="p-2">{month}</td>
                         <td className="p-2 text-right font-medium">
-                          {formatCurrency(amount, currency)}
+                          {formatCurrency(amount, displayCurrency)}
                         </td>
                       </tr>
                     ))}
                     <tr className="font-bold bg-muted">
                       <td className="p-2">TOTAL</td>
-                      <td className="p-2 text-right">{formatCurrency(total, currency)}</td>
+                      <td className="p-2 text-right">{formatCurrency(total, displayCurrency)}</td>
                     </tr>
                   </tbody>
                 </table>
