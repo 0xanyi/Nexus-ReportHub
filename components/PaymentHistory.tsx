@@ -18,13 +18,23 @@ interface Payment {
   uploader: {
     name: string
   }
+  church?: {
+    id: string
+    name: string
+  }
 }
 
 interface PaymentHistoryProps {
   payments: Payment[]
+  currency?: string
+  showChurchColumn?: boolean
 }
 
-export function PaymentHistory({ payments }: PaymentHistoryProps) {
+export function PaymentHistory({ 
+  payments, 
+  currency: defaultCurrency = "GBP",
+  showChurchColumn = false 
+}: PaymentHistoryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedMethod, setSelectedMethod] = useState<string>("all")
@@ -170,6 +180,9 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors"
               >
                 <div className="flex-1">
+                  {showChurchColumn && payment.church && (
+                    <div className="font-medium text-slate-900 mb-1">{payment.church.name}</div>
+                  )}
                   <div className="flex items-center gap-3 mb-2">
                     <div className="font-semibold">{formatDate(payment.paymentDate)}</div>
                     <span
@@ -194,7 +207,7 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
                 </div>
                 <div className="text-right">
                   <div className="text-xl font-bold text-green-600">
-                    {formatCurrency(Number(payment.amount), payment.currency)}
+                    {formatCurrency(Number(payment.amount), defaultCurrency)}
                   </div>
                 </div>
               </div>

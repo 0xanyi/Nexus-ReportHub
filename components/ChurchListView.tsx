@@ -21,8 +21,9 @@ interface Church {
     transactions: number
     payments: number
   }
-  totalPurchases: number
+  totalOrders: number
   totalPayments: number
+  totalCampaigns: number
   balance: number
 }
 
@@ -31,7 +32,7 @@ interface ChurchListViewProps {
   isAdmin: boolean
 }
 
-type SortField = "name" | "group" | "transactions" | "purchases" | "payments" | "balance"
+type SortField = "name" | "group" | "orders" | "payments" | "campaigns" | "balance"
 type SortOrder = "asc" | "desc"
 type ViewMode = "grid" | "table"
 
@@ -71,14 +72,14 @@ export function ChurchListView({ churches }: ChurchListViewProps) {
         case "group":
           compareValue = a.group.name.localeCompare(b.group.name)
           break
-        case "transactions":
-          compareValue = a._count.transactions - b._count.transactions
-          break
-        case "purchases":
-          compareValue = a.totalPurchases - b.totalPurchases
+        case "orders":
+          compareValue = a.totalOrders - b.totalOrders
           break
         case "payments":
           compareValue = a.totalPayments - b.totalPayments
+          break
+        case "campaigns":
+          compareValue = a.totalCampaigns - b.totalCampaigns
           break
         case "balance":
           compareValue = a.balance - b.balance
@@ -177,15 +178,21 @@ export function ChurchListView({ churches }: ChurchListViewProps) {
                 <CardContent>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Purchases:</span>
+                      <span className="text-muted-foreground">Orders:</span>
                       <span className="font-medium">
-                        {formatCurrency(church.totalPurchases, "GBP")}
+                        {formatCurrency(church.totalOrders, "GBP")}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Payments:</span>
                       <span className="font-medium">
                         {formatCurrency(church.totalPayments, "GBP")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Campaigns:</span>
+                      <span className="font-medium text-blue-600">
+                        {formatCurrency(church.totalCampaigns, "GBP")}
                       </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t">
@@ -198,10 +205,6 @@ export function ChurchListView({ churches }: ChurchListViewProps) {
                         {formatCurrency(Math.abs(church.balance), "GBP")}
                         {church.balance < 0 ? " owed" : " credit"}
                       </span>
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground pt-2">
-                      <span>{church._count.transactions} transactions</span>
-                      <span>{church._count.payments} payments</span>
                     </div>
                   </div>
                 </CardContent>
@@ -235,20 +238,12 @@ export function ChurchListView({ churches }: ChurchListViewProps) {
                         Group {getSortIcon("group")}
                       </button>
                     </th>
-                    <th className="text-center p-3">
-                      <button
-                        onClick={() => handleSort("transactions")}
-                        className="font-medium hover:text-primary flex items-center gap-1 justify-center"
-                      >
-                        Transactions {getSortIcon("transactions")}
-                      </button>
-                    </th>
                     <th className="text-right p-3">
                       <button
-                        onClick={() => handleSort("purchases")}
+                        onClick={() => handleSort("orders")}
                         className="font-medium hover:text-primary flex items-center gap-1 justify-end ml-auto"
                       >
-                        Purchases {getSortIcon("purchases")}
+                        Orders {getSortIcon("orders")}
                       </button>
                     </th>
                     <th className="text-right p-3">
@@ -257,6 +252,14 @@ export function ChurchListView({ churches }: ChurchListViewProps) {
                         className="font-medium hover:text-primary flex items-center gap-1 justify-end ml-auto"
                       >
                         Payments {getSortIcon("payments")}
+                      </button>
+                    </th>
+                    <th className="text-right p-3">
+                      <button
+                        onClick={() => handleSort("campaigns")}
+                        className="font-medium hover:text-primary flex items-center gap-1 justify-end ml-auto"
+                      >
+                        Campaigns {getSortIcon("campaigns")}
                       </button>
                     </th>
                     <th className="text-right p-3">
@@ -282,17 +285,14 @@ export function ChurchListView({ churches }: ChurchListViewProps) {
                         <div>{church.group.name}</div>
                         <div className="text-xs">{church.group.zone.name}</div>
                       </td>
-                      <td className="p-3 text-center">
-                        <div>{church._count.transactions}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {church._count.payments} payments
-                        </div>
-                      </td>
                       <td className="p-3 text-right font-medium">
-                        {formatCurrency(church.totalPurchases, "GBP")}
+                        {formatCurrency(church.totalOrders, "GBP")}
                       </td>
                       <td className="p-3 text-right font-medium">
                         {formatCurrency(church.totalPayments, "GBP")}
+                      </td>
+                      <td className="p-3 text-right font-medium text-blue-600">
+                        {formatCurrency(church.totalCampaigns, "GBP")}
                       </td>
                       <td className="p-3 text-right">
                         <div

@@ -7,6 +7,7 @@ import Link from "next/link"
 import { ExportButtons } from "@/components/ExportButtons"
 import { TransactionHistory } from "@/components/TransactionHistory"
 import { PaymentHistory } from "@/components/PaymentHistory"
+import { CampaignBreakdown } from "@/components/churches/CampaignBreakdown"
 
 export default async function ChurchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -50,6 +51,7 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
               name: true,
             },
           },
+          campaignCategory: true,
         },
         orderBy: {
           paymentDate: "desc",
@@ -63,7 +65,7 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
   }
 
   // Calculate financial summary
-  const totalPurchases = church.transactions.reduce((sum, transaction) => {
+  const totalOrders = church.transactions.reduce((sum, transaction) => {
     return (
       sum +
       transaction.lineItems.reduce(
@@ -73,12 +75,18 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
     )
   }, 0)
 
-  const totalPayments = church.payments.reduce(
-    (sum, payment) => sum + Number(payment.amount),
-    0
-  )
+  // Calculate PRINTING payments only (for balance calculation)
+  const printingPayments = church.payments
+    .filter((p) => p.forPurpose === "PRINTING")
+    .reduce((sum, payment) => sum + Number(payment.amount), 0)
 
-  const balance = totalPayments - totalPurchases
+  // Calculate campaign-specific payments (SPONSORSHIP purpose only - separate from balance)
+  const totalCampaigns = church.payments
+    .filter((p) => p.forPurpose === "SPONSORSHIP")
+    .reduce((sum, payment) => sum + Number(payment.amount), 0)
+
+  // Balance = PRINTING payments - Orders (campaigns are NOT included)
+  const balance = printingPayments - totalOrders
 
   // Calculate product breakdown
   const productBreakdown = church.transactions.reduce((acc, transaction) => {
@@ -139,8 +147,8 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
                 name: church.name,
                 group: church.group.name,
                 zone: church.group.zone.name,
-                totalPurchases,
-                totalPayments,
+                totalOrders,
+                totalPayments: printingPayments,
                 balance,
                 transactions: church.transactions.map((t) => ({
                   date: formatDate(t.transactionDate),
@@ -172,14 +180,14 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(totalPurchases, "GBP")}
+              {formatCurrency(totalOrders, "GBP")}
             </div>
             <p className="text-xs text-muted-foreground">
-              {church.transactions.length} transactions
+              {church.transactions.length} orders
             </p>
           </CardContent>
         </Card>
@@ -190,10 +198,10 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(totalPayments, "GBP")}
+              {formatCurrency(printingPayments, "GBP")}
             </div>
             <p className="text-xs text-muted-foreground">
-              {church.payments.length} payments
+              {church.payments.filter((p) => p.forPurpose === "PRINTING").length} payments (printing)
             </p>
           </CardContent>
         </Card>
@@ -218,19 +226,15 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Copies</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {church.transactions
-                .reduce(
-                  (sum, t) =>
-                    sum + t.lineItems.reduce((s, i) => s + i.quantity, 0),
-                  0
-                )
-                .toLocaleString()}
+              {formatCurrency(totalCampaigns, "GBP")}
             </div>
-            <p className="text-xs text-muted-foreground">All time</p>
+            <p className="text-xs text-muted-foreground">
+              {church.payments.filter((p) => p.forPurpose === "SPONSORSHIP").length} contributions
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -314,6 +318,18 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
           ...p,
           amount: Number(p.amount),
         }))} 
+      />
+
+      {/* Campaign Contributions Breakdown */}
+      <CampaignBreakdown
+        payments={church.payments.map((p) => ({
+          id: p.id,
+          paymentDate: p.paymentDate,
+          amount: Number(p.amount),
+          campaignCategory: p.campaignCategory,
+          campaignLabel: p.campaignLabel,
+        }))}
+        currency={church.group.zone.currency}
       />
     </div>
   )

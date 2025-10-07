@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { formatCurrency } from "@/lib/utils"
 import Link from "next/link"
 import { CampaignGivingOverview } from "@/components/analytics/CampaignGivingOverview"
+import { PaymentSummaryGenerator } from "@/components/reports/PaymentSummaryGenerator"
 
 export default async function ReportsPage() {
   const session = await auth()
@@ -116,7 +117,7 @@ export default async function ReportsPage() {
     churches.reduce(
       (acc, church) => {
         const groupKey = church.group.id
-        const purchases = church.transactions.reduce((sum, transaction) => {
+        const orders = church.transactions.reduce((sum, transaction) => {
           return (
             sum +
             transaction.lineItems.reduce(
@@ -126,10 +127,15 @@ export default async function ReportsPage() {
           )
         }, 0)
 
-        const payments = church.payments.reduce(
-          (sum, payment) => sum + Number(payment.amount),
-          0
-        )
+        // PRINTING payments only (for balance calculation)
+        const printingPayments = church.payments
+          .filter((p) => p.forPurpose === "PRINTING")
+          .reduce((sum, payment) => sum + Number(payment.amount), 0)
+
+        // SPONSORSHIP payments (campaigns - separate from balance)
+        const campaignPayments = church.payments
+          .filter((p) => p.forPurpose === "SPONSORSHIP")
+          .reduce((sum, payment) => sum + Number(payment.amount), 0)
 
         if (!acc[groupKey]) {
           acc[groupKey] = {
@@ -137,16 +143,18 @@ export default async function ReportsPage() {
             name: church.group.name,
             zone: church.group.zone.name,
             churches: 0,
-            purchases: 0,
+            orders: 0,
             payments: 0,
+            campaigns: 0,
             outstanding: 0,
           }
         }
 
         acc[groupKey].churches += 1
-        acc[groupKey].purchases += purchases
-        acc[groupKey].payments += payments
-        acc[groupKey].outstanding += Math.max(purchases - payments, 0)
+        acc[groupKey].orders += orders
+        acc[groupKey].payments += printingPayments
+        acc[groupKey].campaigns += campaignPayments
+        acc[groupKey].outstanding += Math.max(orders - printingPayments, 0)
 
         return acc
       },
@@ -157,8 +165,9 @@ export default async function ReportsPage() {
           name: string
           zone: string
           churches: number
-          purchases: number
+          orders: number
           payments: number
+          campaigns: number
           outstanding: number
         }
       >
@@ -166,7 +175,7 @@ export default async function ReportsPage() {
   )
     .map((group) => ({
       ...group,
-      collectionRate: group.purchases > 0 ? (group.payments / group.purchases) * 100 : 0,
+      collectionRate: group.orders > 0 ? (group.payments / group.orders) * 100 : 0,
     }))
     .sort((a, b) => b.payments - a.payments)
 
@@ -189,6 +198,20 @@ export default async function ReportsPage() {
   const overallCollectionRate =
     stats.totalPurchases > 0 ? (stats.totalPayments / stats.totalPurchases) * 100 : 0
 
+  // Get zones with groups for payment summary generator
+  const zones = await prisma.zone.findMany({
+    include: {
+      groups: {
+        orderBy: {
+          name: "asc",
+        },
+      },
+    },
+    orderBy: {
+      name: "asc",
+    },
+  })
+
   return (
     <div className="space-y-10">
       <div className="flex flex-col gap-3">
@@ -206,6 +229,8 @@ export default async function ReportsPage() {
           Jump to Analytics
         </Link>
       </div>
+
+      <PaymentSummaryGenerator zones={zones} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card className="border-none bg-gradient-to-br from-emerald-500/15 via-emerald-400/5 to-teal-500/15 shadow-lg shadow-emerald-500/10">
@@ -273,16 +298,17 @@ export default async function ReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] divide-y divide-slate-200 text-sm">
+            <table className="w-full min-w-[720px] divide-y divide-slate-200 text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="py-3 pr-4 font-medium">Group</th>
                   <th className="py-3 pr-4 font-medium">Zone</th>
                   <th className="py-3 pr-4 font-medium text-right">Churches</th>
-                  <th className="py-3 pr-4 font-medium text-right">Purchases</th>
+                  <th className="py-3 pr-4 font-medium text-right">Orders</th>
                   <th className="py-3 pr-4 font-medium text-right">Payments</th>
+                  <th className="py-3 pr-4 font-medium text-right">Campaigns</th>
                   <th className="py-3 pr-4 font-medium text-right">Outstanding</th>
-                  <th className="py-3 font-medium text-right">Collection</th>
+                  <th className="py-3 font-medium text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -292,99 +318,26 @@ export default async function ReportsPage() {
                     <td className="py-3 pr-4 text-slate-500">{group.zone}</td>
                     <td className="py-3 pr-4 text-right text-slate-500">{group.churches}</td>
                     <td className="py-3 pr-4 text-right text-slate-800">
-                      {formatCurrency(group.purchases, "GBP")}
+                      {formatCurrency(group.orders, "GBP")}
                     </td>
                     <td className="py-3 pr-4 text-right text-slate-800">
                       {formatCurrency(group.payments, "GBP")}
                     </td>
+                    <td className="py-3 pr-4 text-right text-slate-800">
+                      {formatCurrency(group.campaigns, "GBP")}
+                    </td>
                     <td className="py-3 pr-4 text-right font-medium text-rose-600">
                       {formatCurrency(group.outstanding, "GBP")}
                     </td>
-                    <td className="py-3 text-right">
-                      <span
-                        className={
-                          group.collectionRate >= 90
-                            ? "rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-600"
-                            : group.collectionRate >= 70
-                              ? "rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-600"
-                              : "rounded-full bg-rose-500/15 px-3 py-1 text-xs font-semibold text-rose-600"
-                        }
-                      >
-                        {group.collectionRate.toFixed(1)}%
-                      </span>
+                    <td className="py-3 text-center">
+                      <Link href={`/dashboard/groups/${group.id}`}>
+                        <button className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
+                          View Details
+                        </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-none bg-white/90 shadow-xl shadow-slate-900/5">
-        <CardHeader>
-          <CardTitle>Church Financial Summary</CardTitle>
-          <CardDescription>
-            Drill-down of purchases, payments, and balances for every church
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50/80">
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-3 py-3 font-medium">Church</th>
-                  <th className="px-3 py-3 font-medium">Group</th>
-                  <th className="px-3 py-3 font-medium text-right">Purchases</th>
-                  <th className="px-3 py-3 font-medium text-right">Payments</th>
-                  <th className="px-3 py-3 font-medium text-right">Balance</th>
-                  <th className="px-3 py-3 font-medium text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {churches.map((church) => {
-                  const totalPurchases = church.transactions.reduce((sum, transaction) => {
-                    return sum + transaction.lineItems.reduce(
-                      (lineSum, item) => lineSum + Number(item.totalAmount),
-                      0
-                    )
-                  }, 0)
-
-                  const totalPayments = church.payments.reduce(
-                    (sum, payment) => sum + Number(payment.amount),
-                    0
-                  )
-
-                  const balance = totalPayments - totalPurchases
-
-                  return (
-                    <tr key={church.id} className="transition hover:bg-slate-50/80">
-                      <td className="px-3 py-3 font-medium text-slate-800">{church.name}</td>
-                      <td className="px-3 py-3 text-slate-500">{church.group.name}</td>
-                      <td className="px-3 py-3 text-right text-slate-800">
-                        {formatCurrency(totalPurchases, "GBP")}
-                      </td>
-                      <td className="px-3 py-3 text-right text-slate-800">
-                        {formatCurrency(totalPayments, "GBP")}
-                      </td>
-                      <td
-                        className={`px-3 py-3 text-right font-semibold ${
-                          balance < 0 ? "text-rose-600" : "text-emerald-600"
-                        }`}
-                      >
-                        {formatCurrency(Math.abs(balance), "GBP")}
-                        {balance < 0 ? " owed" : " credit"}
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <Link href={`/dashboard/churches/${church.id}`}>
-                          <button className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
-                            View Details
-                          </button>
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                })}
               </tbody>
             </table>
           </div>

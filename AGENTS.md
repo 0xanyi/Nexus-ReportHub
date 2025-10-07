@@ -33,7 +33,8 @@ All other scripts wrap these core tasks.
 │  ├─ charts/               → Chart components (Recharts integration)
 │  │  └─ FinancialCharts.tsx → Financial charts (bar, line, pie)
 │  ├─ churches/             → Church-specific components
-│  │  └─ BulkUpload.tsx     → Bulk church CSV upload modal
+│  │  ├─ BulkUpload.tsx     → Bulk church CSV upload modal
+│  │  └─ CampaignBreakdown.tsx → Campaign contributions with date range filters
 │  ├─ users/                → User management components
 │  │  └─ UserList.tsx       → User table with search, filter, delete
 │  ├─ ui/                   → Reusable UI components (Button, Input, Card, Dialog, etc.)
@@ -318,16 +319,17 @@ A pull request is reviewable when it includes:
    - **Enhanced Church List View**:
      - Grid and table view toggle
      - Real-time search and filtering
-     - Sort by name, group, balance
+     - Sort by name, group, balance, orders
      - Filter by group, balance status
      - Clear filters button
    - Individual church detail pages with:
-     - Financial summary (purchases, payments, balance, copies)
+     - **Financial summary**: Total Orders, Payments, Balance, and Campaigns
      - Product breakdown by type
      - Monthly summary for current year
      - **Paginated Transaction History**: Filter by year, month, product
      - **Paginated Payment History**: Filter by method, color-coded
-   - **Export functionality**: Download reports as PDF or Excel
+     - **Campaign Breakdown**: Monthly contributions per campaign with date range filters
+   - **Export functionality**: Download reports as PDF or Excel with "Orders" terminology
 
 10. **Campaign Management** (All Users)
     - **Campaign List Page** (`/dashboard/campaigns`):
@@ -599,11 +601,11 @@ Before deploying to production:
 
 **Project Status**: Production Ready ✅  
 **Current Phase**: All Major Features Implemented & Deployed  
-**Version**: 2.4.0  
+**Version**: 2.5.0  
 **License**: ISC  
 **Maintainer**: admin@nexusreporthub.com
 
-### Implemented Features (v2.4.0)
+### Implemented Features (v2.5.0)
 
 #### Core Features
 ✅ Authentication & Role-Based Access Control (4 roles)  
@@ -654,17 +656,20 @@ Before deploying to production:
 ✅ **Enhanced Church Management**
   - Grid and table view toggle
   - Advanced search and filtering
+  - Sort by name, group, balance, orders
   - Paginated transaction history with filters
   - Paginated payment history with color coding
-  - Sort by multiple criteria
+  - **Campaign breakdown with date range filters**
   - Balance status indicators
+  - Campaign contribution tracking by month
 
 ✅ **Responsive UI with shadcn/ui**
   - Mobile-friendly layouts
-  - Interactive components
+  - Interactive components (Dialog, Select, Input, etc.)
   - Color-coded badges and indicators
   - Professional card-based designs
-  - Custom Textarea component for forms
+  - Custom Textarea and Select components
+  - Radix UI integration for accessible components
 
 ### Deployment Status
 
@@ -683,7 +688,20 @@ The application is fully deployed and production-ready:
 - ✅ Build passing (34.2KB middleware)
 - ✅ Security hardened (bcrypt, JWT, role checks)
 
-### Recent Updates (v2.4.0)
+### Recent Updates (v2.5.0)
+
+**Church Financial Display Enhancements** (Jan 2026)
+- ✅ **Terminology Update**: Changed "Total Purchases" to "Total Orders" across entire application
+- ✅ **Campaign Summary Card**: Replaced "Total Copies" with "Total Campaigns" showing sponsorship totals
+- ✅ **Campaign Breakdown Component**: Created comprehensive campaign contribution tracking
+  - Date range filters (All Time, Year, Quarter, Month)
+  - Monthly breakdown tables per campaign category
+  - Support for both normalized categories and legacy labels
+  - Zone currency integration
+- ✅ **Enhanced Church Detail Page**: Now includes full campaign contribution history
+- ✅ **Export Updates**: PDF and Excel exports now use "Orders" terminology consistently
+- ✅ **New UI Components**: Added Radix UI Select component for date filtering
+- ✅ **Dependencies Added**: Installed @radix-ui/react-select and lucide-react for enhanced UI
 
 **Campaign Management** (Jan 2026)
 - Implemented complete campaign CRUD system for tracking fundraising initiatives
