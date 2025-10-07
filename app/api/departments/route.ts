@@ -18,6 +18,11 @@ export async function GET() {
 
     const departments = await prisma.department.findMany({
       include: {
+        productTypes: {
+          orderBy: {
+            name: "asc",
+          },
+        },
         _count: {
           select: {
             productTypes: true,
@@ -32,7 +37,7 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json(departments)
+    return NextResponse.json({ departments })
   } catch (error) {
     console.error("Get departments error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

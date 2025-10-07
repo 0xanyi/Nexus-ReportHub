@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -39,7 +39,8 @@ export function PaymentHistory({
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedMethod, setSelectedMethod] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const groupsPerPage = 6
 
   // Get unique years and methods
   const years = useMemo(() => {
@@ -74,19 +75,64 @@ export function PaymentHistory({
     })
   }, [payments, searchQuery, selectedYear, selectedMethod])
 
-  // Pagination
-  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage)
-  const paginatedPayments = filteredPayments.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const groupedPayments = useMemo(() => {
+    const groups = new Map<
+      string,
+      { dateKey: string; date: Date; payments: Payment[]; total: number }
+    >()
+
+    filteredPayments.forEach((payment) => {
+      const date = new Date(payment.paymentDate)
+      const dateKey = date.toISOString().split("T")[0]
+
+      if (!groups.has(dateKey)) {
+        groups.set(dateKey, {
+          dateKey,
+          date,
+          payments: [],
+          total: 0,
+        })
+      }
+
+      const group = groups.get(dateKey)!
+      group.payments.push(payment)
+      group.total += Number(payment.amount)
+    })
+
+    return Array.from(groups.values()).sort((a, b) => b.date.getTime() - a.date.getTime())
+  }, [filteredPayments])
+
+  const totalPages = Math.max(1, Math.ceil(groupedPayments.length / groupsPerPage))
+  const paginatedGroups = groupedPayments.slice(
+    (currentPage - 1) * groupsPerPage,
+    currentPage * groupsPerPage
   )
 
   // Calculate totals
   const filteredTotal = filteredPayments.reduce((sum, payment) => sum + Number(payment.amount), 0)
 
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    const nextPage = Math.max(1, Math.min(totalPages, page))
+    setCurrentPage(nextPage)
     window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const toggleGroup = (dateKey: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(dateKey)) {
+        next.delete(dateKey)
+      } else {
+        next.add(dateKey)
+      }
+      return next
+    })
   }
 
   const getMethodBadgeColor = (method: string) => {
@@ -107,8 +153,9 @@ export function PaymentHistory({
       <CardHeader>
         <CardTitle>Payment History</CardTitle>
         <CardDescription>
-          {filteredPayments.length} payment{filteredPayments.length !== 1 ? "s" : ""} • Total:{" "}
-          {formatCurrency(filteredTotal, "GBP")}
+          {filteredPayments.length} payment{filteredPayments.length !== 1 ? "s" : ""} across {" "}
+          {groupedPayments.length} day{groupedPayments.length !== 1 ? "s" : ""} • Total: {" "}
+          {formatCurrency(filteredTotal, defaultCurrency)}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -173,45 +220,75 @@ export function PaymentHistory({
 
         {/* Payments List */}
         <div className="space-y-3">
-          {paginatedPayments.length > 0 ? (
-            paginatedPayments.map((payment) => (
-              <div
-                key={payment.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex-1">
-                  {showChurchColumn && payment.church && (
-                    <div className="font-medium text-slate-900 mb-1">{payment.church.name}</div>
+          {paginatedGroups.length > 0 ? (
+            paginatedGroups.map((group) => {
+              const isExpanded = expandedGroups.has(group.dateKey)
+
+              return (
+                <div key={group.dateKey} className="border rounded-lg">
+                  <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-muted/40 rounded-t-lg">
+                    <div>
+                      <div className="text-lg font-semibold">{formatDate(group.date)}</div>
+                      <p className="text-sm text-muted-foreground">
+                        {group.payments.length} payment{group.payments.length !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl font-bold text-green-600">
+                        {formatCurrency(group.total, defaultCurrency)}
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => toggleGroup(group.dateKey)}>
+                        {isExpanded ? "Hide Details" : "View Details"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="space-y-3 p-4">
+                      {group.payments.map((payment) => (
+                        <div
+                          key={payment.id}
+                          className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between p-4 border rounded-lg bg-background"
+                        >
+                          <div className="flex-1">
+                            {showChurchColumn && payment.church && (
+                              <div className="font-medium text-slate-900 mb-1">{payment.church.name}</div>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-medium ${getMethodBadgeColor(
+                                  payment.paymentMethod
+                                )}`}
+                              >
+                                {payment.paymentMethod.replace("_", " ")}
+                              </span>
+                              {payment.forPurpose && (
+                                <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
+                                  {payment.forPurpose}
+                                </span>
+                              )}
+                              {payment.referenceNumber && (
+                                <span className="text-xs text-muted-foreground">
+                                  Ref: {payment.referenceNumber}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Uploaded by {payment.uploader.name}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-green-600">
+                              {formatCurrency(Number(payment.amount), defaultCurrency)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="font-semibold">{formatDate(payment.paymentDate)}</div>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${getMethodBadgeColor(
-                        payment.paymentMethod
-                      )}`}
-                    >
-                      {payment.paymentMethod.replace("_", " ")}
-                    </span>
-                    {payment.forPurpose && (
-                      <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
-                        {payment.forPurpose}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {payment.referenceNumber && (
-                      <span className="mr-3">Ref: {payment.referenceNumber}</span>
-                    )}
-                    <span>Uploaded by {payment.uploader.name}</span>
-                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-xl font-bold text-green-600">
-                    {formatCurrency(Number(payment.amount), defaultCurrency)}
-                  </div>
-                </div>
-              </div>
-            ))
+              )
+            })
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               No payments found matching your criteria
@@ -220,11 +297,11 @@ export function PaymentHistory({
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {groupedPayments.length > groupsPerPage && (
           <div className="flex items-center justify-between mt-6 pt-6 border-t">
             <div className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages} • Showing {paginatedPayments.length} of{" "}
-              {filteredPayments.length} payments
+              Page {currentPage} of {totalPages} • Showing {paginatedGroups.length} day
+              {paginatedGroups.length !== 1 ? "s" : ""}
             </div>
             <div className="flex gap-2">
               <Button

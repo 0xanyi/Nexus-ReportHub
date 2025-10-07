@@ -70,6 +70,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
   let totalOrders = 0
   let printingPayments = 0
   let totalCampaigns = 0
+  let totalCopies = 0
 
   const churchSummaries = group.churches.map((church) => {
     const orders = church.transactions.reduce((sum, transaction) => {
@@ -87,9 +88,15 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       .filter((p) => p.forPurpose === "SPONSORSHIP")
       .reduce((sum, payment) => sum + Number(payment.amount), 0)
 
+    // Count total copies across all transactions
+    const copies = church.transactions.reduce((sum, transaction) => {
+      return sum + transaction.lineItems.reduce((lineSum, item) => lineSum + item.quantity, 0)
+    }, 0)
+
     totalOrders += orders
     printingPayments += printing
     totalCampaigns += campaigns
+    totalCopies += copies
 
     return {
       id: church.id,
@@ -196,7 +203,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
           <CardHeader className="space-y-3">
             <CardTitle className="text-sm font-medium text-slate-700">Total Orders</CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              Product orders across all churches
+              {totalCopies.toLocaleString()} copies ordered overall
             </CardDescription>
           </CardHeader>
           <CardContent className="text-3xl font-semibold text-slate-900">
@@ -256,7 +263,9 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       <Card className="border-none bg-white/80 shadow-lg shadow-slate-900/5">
         <CardHeader>
           <CardTitle>Product Breakdown</CardTitle>
-          <CardDescription>Distribution by product type across all churches</CardDescription>
+          <CardDescription>
+            Distribution by product type across all churches • {totalCopies.toLocaleString()} total copies
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

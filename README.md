@@ -29,6 +29,8 @@ A comprehensive church financial and inventory management system for Rhapsody of
 - ✅ **Bulk Church Upload** - CSV import for creating multiple churches at once
 - ✅ **Three CSV Upload Types** - Transactions, Orders, and Churches with separate templates
 - ✅ **Dynamic Product Detection** - Automatically detect and create products from order CSVs
+- ✅ **Manual Order Management** - Create, edit, and delete orders directly from church pages
+- ✅ **Product Management** - Add, edit, and manage products with pricing and department assignment
 - ✅ **Department Management** - Full CRUD for organizational departments
 - ✅ Create, edit, delete groups and churches
 - ✅ Move churches between groups
@@ -163,6 +165,7 @@ After seeding, you can login with:
 │   │   ├── churches/        # Church CRUD operations
 │   │   ├── departments/     # Department CRUD operations
 │   │   ├── groups/          # Group CRUD operations
+│   │   ├── transactions/    # Manual order CRUD operations
 │   │   ├── upload/          # CSV upload processing
 │   │   ├── users/           # User management
 │   │   ├── zones/           # Zone CRUD operations
@@ -174,7 +177,9 @@ After seeding, you can login with:
 │   ├── charts/              # Chart components (Recharts)
 │   ├── churches/            # Church-specific components
 │   │   ├── BulkUpload.tsx   # Bulk church CSV upload
-│   │   └── CampaignBreakdown.tsx  # Campaign contribution filters
+│   │   ├── CampaignBreakdown.tsx  # Campaign contribution filters
+│   │   ├── OrderForm.tsx    # Manual order creation/editing dialog
+│   │   └── ChurchOrdersManager.tsx # Order management wrapper component
 │   ├── ui/                  # shadcn/ui + Radix UI components
 │   └── ExportButtons.tsx    # PDF/Excel export buttons
 ├── lib/
@@ -337,17 +342,18 @@ npx prisma migrate deploy
 
 ### Version 2.5.0 (January 2026)
 
-**Church Financial Display Enhancements**
-- ✅ Changed terminology from "Purchases" to "Orders" for clarity
-- ✅ Added "Total Campaigns" summary card showing sponsorship contributions
-- ✅ Created comprehensive Campaign Breakdown component with:
-  - Date range filters (All Time, Year, Quarter, Month)
-  - Monthly contribution tables per campaign category
-  - Integration with zone currencies
-- ✅ Enhanced church detail pages with campaign contribution history
-- ✅ Updated PDF/Excel exports to use "Orders" terminology
-- ✅ Added Radix UI Select component for improved date filtering
-- ✅ Installed lucide-react for modern iconography
+**Product Management System**
+- ✅ **Product Creation**: Add new products manually with department assignment
+- ✅ **Product Editing**: Update product names, prices, and department assignments
+- ✅ **Product Deletion**: Remove products with protection for products in use
+- ✅ **Pricing Management**: Set and update product prices with currency support
+- ✅ **Department Organization**: Products organized by department with uniqueness constraints
+- ✅ **Usage Tracking**: Display order count for each product
+- ✅ **Admin-only Access**: Only SUPER_ADMIN and ZONE_ADMIN can manage products
+- ✅ **Form Validation**: Client and server-side validation with error handling
+- ✅ **Responsive UI**: Card-based layout with edit/delete actions
+- ✅ **API Endpoints**: Full REST API for product operations (`/api/products`, `/api/products/[id]`)
+- ✅ **Navigation Integration**: Products link added to admin sidebar
 
 ## Future Enhancements
 

@@ -56,6 +56,15 @@ export default async function DashboardLayout({
         ...(isAdmin
           ? [
               {
+                label: "Products",
+                href: "/dashboard/products",
+                description: "Manage available products and pricing",
+              },
+            ]
+          : []),
+        ...(isAdmin
+          ? [
+              {
                 label: "Groups",
                 href: "/dashboard/groups",
                 description: "Manage ministry group structure",

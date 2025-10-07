@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { formatCurrency, formatDate } from "@/lib/utils"
 import Link from "next/link"
 import { ExportButtons } from "@/components/ExportButtons"
-import { TransactionHistory } from "@/components/TransactionHistory"
 import { PaymentHistory } from "@/components/PaymentHistory"
 import { CampaignBreakdown } from "@/components/churches/CampaignBreakdown"
+import { ChurchOrdersManager } from "@/components/churches/ChurchOrdersManager"
 
 export default async function ChurchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -70,6 +70,17 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
       sum +
       transaction.lineItems.reduce(
         (lineSum, item) => lineSum + Number(item.totalAmount),
+        0
+      )
+    )
+  }, 0)
+
+  // Calculate total copies ordered
+  const totalCopies = church.transactions.reduce((sum, transaction) => {
+    return (
+      sum +
+      transaction.lineItems.reduce(
+        (lineSum, item) => lineSum + item.quantity,
         0
       )
     )
@@ -187,7 +198,7 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
               {formatCurrency(totalOrders, "GBP")}
             </div>
             <p className="text-xs text-muted-foreground">
-              {church.transactions.length} orders
+              {totalCopies.toLocaleString()} copies ordered overall
             </p>
           </CardContent>
         </Card>
@@ -240,37 +251,35 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
       </div>
 
       {/* Product Breakdown */}
-      <Card>
+      <Card className="border-none bg-white/80 shadow-lg shadow-slate-900/5">
         <CardHeader>
           <CardTitle>Product Breakdown</CardTitle>
-          <CardDescription>Copies ordered by product type</CardDescription>
+          <CardDescription>
+            Copies ordered by product type • {totalCopies.toLocaleString()} total copies
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Object.entries(productBreakdown).map(([productName, data]) => (
               <div
                 key={productName}
-                className="flex items-center justify-between p-3 border rounded-lg"
+                className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm"
               >
-                <div>
-                  <div className="font-medium">{productName}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {data.quantity.toLocaleString()} copies
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold">
+                <div className="text-sm font-medium text-slate-900">{productName}</div>
+                <div className="mt-2 flex items-end justify-between">
+                  <div className="text-2xl font-semibold text-slate-800">{data.quantity}</div>
+                  <div className="text-sm text-slate-500">
                     {formatCurrency(data.totalAmount, "GBP")}
                   </div>
                 </div>
               </div>
             ))}
-            {Object.keys(productBreakdown).length === 0 && (
-              <p className="text-center text-muted-foreground py-4">
-                No orders recorded yet
-              </p>
-            )}
           </div>
+          {Object.keys(productBreakdown).length === 0 && (
+            <p className="text-center text-muted-foreground py-4">
+              No orders recorded yet
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -296,8 +305,10 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
         </Card>
       )}
 
-      {/* Enhanced Transaction History with Filtering */}
-      <TransactionHistory 
+      {/* Enhanced Transaction History with Order Management */}
+      <ChurchOrdersManager
+        churchId={church.id}
+        churchName={church.name}
         transactions={church.transactions.map(t => ({
           ...t,
           lineItems: t.lineItems.map(item => ({
@@ -309,7 +320,8 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
               unitPrice: Number(item.productType.unitPrice),
             },
           })),
-        }))} 
+        }))}
+        isAdmin={isAdmin}
       />
 
       {/* Enhanced Payment History with Filtering */}
