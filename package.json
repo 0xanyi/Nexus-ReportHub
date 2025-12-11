@@ -21,7 +21,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/0xanyi/Nexus-ReportHub/issues"
   },
@@ -43,8 +42,8 @@
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.545.0",
-    "next": "^15.5.4",
-    "next-auth": "^5.0.0-beta.29",
+    "next": "^16.0.8",
+    "next-auth": "^5.0.0-beta.30",
     "papaparse": "^5.5.3",
     "postcss": "^8.5.6",
     "react": "^19.1.1",
@@ -64,7 +63,7 @@
     "@types/papaparse": "^5.3.16",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.36.0",
-    "eslint-config-next": "^15.5.4",
+    "eslint-config-next": "^16.0.8",
     "prisma": "^6.16.3",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.6"
