@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { useEffect, useState, useCallback } from "react"
+import useSWR from "swr"
 import {
   Select,
   SelectContent,
@@ -16,32 +16,24 @@ type Props = {
   className?: string
 }
 
+const fetcher = (url: string) => fetch(url).then(res => res.json())
+
 export function FinancialYearSelector({ className }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [years, setYears] = useState<FinancialYear[]>([])
-  const [loading, setLoading] = useState(true)
+  
+  const { data, isLoading } = useSWR<{ financialYears: FinancialYear[] }>(
+    "/api/financial-years",
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // Cache for 1 minute
+    }
+  )
 
   const currentFyParam = searchParams.get("fy")
-
-  const fetchYears = useCallback(async () => {
-    try {
-      const res = await fetch("/api/financial-years")
-      if (res.ok) {
-        const data = await res.json()
-        setYears(data.financialYears || [])
-      }
-    } catch {
-      // Ignore fetch errors
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void fetchYears()
-  }, [fetchYears])
+  const years = data?.financialYears ?? []
 
   const currentYear = years.find((y) => y.isCurrent)
   const selectedYear = currentFyParam
@@ -59,7 +51,7 @@ export function FinancialYearSelector({ className }: Props) {
     router.push(`${pathname}?${params.toString()}`)
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className={className}>
         <div className="h-10 w-32 animate-pulse rounded-md bg-slate-100" />
