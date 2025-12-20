@@ -56,9 +56,16 @@ export default async function DashboardPage({
   const fyLabel = fyBounds?.label ?? "Current Year"
   
   const now = new Date()
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  // For "this month" calculations, use the last month of the selected FY
+  // If viewing current FY and we're within it, use current month
+  // If viewing archived FY, use the last month of that FY
+  const isViewingCurrentFy = fyEndDate >= now
+  const lastMonthOfFy = new Date(fyEndDate.getFullYear(), fyEndDate.getMonth(), 1)
+  const currentMonthStart = isViewingCurrentFy
+    ? new Date(now.getFullYear(), now.getMonth(), 1)
+    : lastMonthOfFy
 
-  const isCurrentMonth = (date: Date) => date >= currentMonthStart
+  const isRecentMonth = (date: Date) => date >= currentMonthStart && date <= fyEndDate
 
   // Fetch comprehensive dashboard data
   const [
@@ -227,7 +234,7 @@ export default async function DashboardPage({
       churchOrders += orderAmount
       churchCopies += orderCopies
 
-      if (isCurrentMonth(transaction.transactionDate)) {
+      if (isRecentMonth(transaction.transactionDate)) {
         churchMonthlyCopies += orderCopies
       }
     })
@@ -236,7 +243,7 @@ export default async function DashboardPage({
       const paymentAmount = Number(payment.amount)
       churchPayments += paymentAmount
 
-      if (isCurrentMonth(payment.paymentDate)) {
+      if (isRecentMonth(payment.paymentDate)) {
         churchMonthlyPayments += paymentAmount
       }
     })
