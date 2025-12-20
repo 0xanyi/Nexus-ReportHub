@@ -1,19 +1,32 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import { formatDate } from "@/lib/utils"
-import { getResetConfirmationText } from "@/lib/financialYear"
-
+import { getResetConfirmationText, getNextFinancialYearBounds } from "@/lib/financialYear"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
 type FinancialYear = {
   id: string
   label: string
   startDate: string | Date
   endDate: string | Date
   isCurrent: boolean
+}
+
+type FinancialYearWithCounts = FinancialYear & {
+  transactionCount: number
+  paymentCount: number
+  uploadCount: number
 }
 
 type ResetPreview = {
@@ -59,11 +72,39 @@ export default function FinancialYearManager({
   const [error, setError] = useState<string | null>(null)
   const [resetConfirmation, setResetConfirmation] = useState("")
   const [preview, setPreview] = useState<ResetPreview | null>(null)
+  const [advanceConfirmation, setAdvanceConfirmation] = useState("")
+  const [showAdvanceDialog, setShowAdvanceDialog] = useState(false)
+  const [allYears, setAllYears] = useState<FinancialYearWithCounts[]>([])
+  const [loadingYears, setLoadingYears] = useState(false)
 
   const expectedConfirmation = useMemo(() => {
     if (!current) return ""
     return getResetConfirmationText(current.label)
   }, [current])
+
+  const nextYearBounds = useMemo(() => {
+    if (!current) return null
+    return getNextFinancialYearBounds({ endDate: new Date(current.endDate) })
+  }, [current])
+
+  const advanceExpectedConfirmation = useMemo(() => {
+    if (!nextYearBounds) return ""
+    return `START ${nextYearBounds.label}`
+  }, [nextYearBounds])
+
+  const fetchAllYears = useCallback(async () => {
+    setLoadingYears(true)
+    try {
+      const res = await fetchJson<{ financialYears: FinancialYearWithCounts[] }>(
+        "/api/financial-years"
+      )
+      setAllYears(res.financialYears)
+    } catch {
+      // Ignore errors for now
+    } finally {
+      setLoadingYears(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (current) return
@@ -86,6 +127,10 @@ export default function FinancialYearManager({
   }, [current])
 
   useEffect(() => {
+    void fetchAllYears()
+  }, [fetchAllYears, current])
+
+  useEffect(() => {
     if (!current) return
 
     let isMounted = true
@@ -104,6 +149,40 @@ export default function FinancialYearManager({
       isMounted = false
     }
   }, [current])
+
+  const handleSetCurrent = async (yearId: string) => {
+    setError(null)
+    setLoading(true)
+    try {
+      const res = await fetchJson<{ financialYear: FinancialYear }>(
+        `/api/financial-years/${yearId}/set-current`,
+        { method: "POST" }
+      )
+      setCurrent(res.financialYear)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to set financial year")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAdvanceYear = async () => {
+    setError(null)
+    setLoading(true)
+    try {
+      const res = await fetchJson<{ financialYear: FinancialYear }>(
+        "/api/financial-years/start-next",
+        { method: "POST" }
+      )
+      setCurrent(res.financialYear)
+      setAdvanceConfirmation("")
+      setShowAdvanceDialog(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start next financial year")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -154,28 +233,124 @@ export default function FinancialYearManager({
           <div className="flex flex-wrap gap-3">
             <Button
               disabled={!current || loading}
-              onClick={() => {
-                setError(null)
-                setLoading(true)
-                void (async () => {
-                  try {
-                    const res = await fetchJson<{ financialYear: FinancialYear }>(
-                      "/api/financial-years/start-next",
-                      { method: "POST" }
-                    )
-                    setCurrent(res.financialYear)
-                    setResetConfirmation("")
-                  } catch (err) {
-                    setError(err instanceof Error ? err.message : "Failed to start next financial year")
-                  } finally {
-                    setLoading(false)
-                  }
-                })()
-              }}
+              onClick={() => setShowAdvanceDialog(true)}
             >
               Start Next Financial Year
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Advance Year Confirmation Dialog */}
+      <Dialog open={showAdvanceDialog} onOpenChange={setShowAdvanceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-amber-700">Advance Financial Year</DialogTitle>
+            <DialogDescription>
+              This action will advance the system to a new financial year. All new data will be
+              associated with the new year. This is a significant change.
+            </DialogDescription>
+          </DialogHeader>
+
+          {nextYearBounds && (
+            <div className="space-y-3 py-2">
+              <div className="rounded-lg bg-amber-50 p-4 text-sm">
+                <p className="font-medium text-amber-800">You are about to start:</p>
+                <p className="mt-1 text-amber-700">
+                  <span className="font-semibold">{nextYearBounds.label}</span>
+                  {" "}({formatDate(nextYearBounds.startDate)} → {formatDate(nextYearBounds.endDate)})
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm">
+                  Type{" "}
+                  <span className="font-mono font-semibold">{advanceExpectedConfirmation}</span>
+                  {" "}to confirm.
+                </p>
+                <Input
+                  value={advanceConfirmation}
+                  onChange={(e) => setAdvanceConfirmation(e.target.value)}
+                  placeholder={advanceExpectedConfirmation}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAdvanceDialog(false)
+                setAdvanceConfirmation("")
+              }}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={loading || advanceConfirmation !== advanceExpectedConfirmation}
+              onClick={() => void handleAdvanceYear()}
+            >
+              {loading ? "Processing..." : "Confirm Advance"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* All Financial Years Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Financial Years</CardTitle>
+          <CardDescription>
+            View and manage all historical financial years. Set any year as current to roll back.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingYears ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : allYears.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No financial years found.</p>
+          ) : (
+            <div className="space-y-3">
+              {allYears.map((fy) => (
+                <div
+                  key={fy.id}
+                  className="rounded-lg border p-4"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="font-medium">
+                      {fy.label}
+                      {fy.isCurrent && (
+                        <Badge className="ml-2" variant="default">
+                          Current
+                        </Badge>
+                      )}
+                    </div>
+                    {!fy.isCurrent && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={loading}
+                        onClick={() => void handleSetCurrent(fy.id)}
+                      >
+                        Set as Current
+                      </Button>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatDate(new Date(fy.startDate))} → {formatDate(new Date(fy.endDate))}
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-xs">
+                    <div className="text-center">{fy.transactionCount}</div>
+                    <div className="text-center">{fy.paymentCount}</div>
+                    <div className="text-center">{fy.uploadCount}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

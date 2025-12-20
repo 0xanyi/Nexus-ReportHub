@@ -5,8 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
+import { getFinancialYearFromParam } from "@/lib/financialYear"
+import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
+import { Suspense } from "react"
 
-export default async function UploadHistoryPage() {
+export default async function UploadHistoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const session = await auth()
 
   if (!session?.user) {
@@ -18,7 +25,20 @@ export default async function UploadHistoryPage() {
     redirect("/dashboard")
   }
 
+  const resolvedSearchParams = await searchParams
+  const fyParam = resolvedSearchParams.fy as string | undefined
+  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
+  const fyStartDate = fyBounds?.startDate ?? new Date(new Date().getFullYear(), 0, 1)
+  const fyEndDate = fyBounds?.endDate ?? new Date()
+  const fyLabel = fyBounds?.label ?? "Current Year"
+
   const uploads = await prisma.uploadHistory.findMany({
+    where: {
+      uploadedAt: {
+        gte: fyStartDate,
+        lte: fyEndDate,
+      },
+    },
     include: {
       uploader: {
         select: {
@@ -30,21 +50,26 @@ export default async function UploadHistoryPage() {
     orderBy: {
       uploadedAt: "desc",
     },
-    take: 50,
+    take: 100,
   })
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Upload History</h2>
           <p className="text-muted-foreground">
-            View all CSV uploads and their processing status
+            CSV uploads for <span className="font-semibold">{fyLabel}</span>
           </p>
         </div>
-        <Link href="/dashboard/upload">
-          <Button>Upload New CSV</Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Suspense fallback={<div className="h-10 w-32 animate-pulse rounded-md bg-slate-100" />}>
+            <FinancialYearSelector />
+          </Suspense>
+          <Link href="/dashboard/upload">
+            <Button>Upload New CSV</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-4">

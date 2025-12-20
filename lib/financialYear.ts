@@ -53,3 +53,28 @@ export function getNextFinancialYearBounds(currentYear: {
 export function getResetConfirmationText(fyLabel: string): string {
   return `RESET ${fyLabel}`
 }
+
+export async function getFinancialYearFromParam(
+  fyLabel: string | undefined,
+  prisma: { financialYear: { findFirst: (args: { where: object }) => Promise<{ id: string; label: string; startDate: Date; endDate: Date; isCurrent: boolean } | null> } }
+): Promise<{ startDate: Date; endDate: Date; label: string } | null> {
+  if (fyLabel) {
+    const fy = await prisma.financialYear.findFirst({
+      where: { label: fyLabel },
+    })
+    if (fy) {
+      return { startDate: fy.startDate, endDate: fy.endDate, label: fy.label }
+    }
+  }
+
+  const current = await prisma.financialYear.findFirst({
+    where: { isCurrent: true },
+  })
+
+  if (current) {
+    return { startDate: current.startDate, endDate: current.endDate, label: current.label }
+  }
+
+  const bounds = getFinancialYearBounds(new Date())
+  return bounds
+}

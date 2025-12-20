@@ -2,10 +2,12 @@ import { auth } from "@/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency } from "@/lib/utils"
+import { getFinancialYearFromParam } from "@/lib/financialYear"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import type { ComponentType, SVGProps } from "react"
+import { DashboardHeader } from "@/components/financial-year/DashboardHeader"
 
 
 
@@ -39,12 +41,22 @@ function getPerformanceLabel(rate: number): string {
   return "Needs Attention"
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const session = await auth()
+  const resolvedSearchParams = await searchParams
+  const fyParam = resolvedSearchParams.fy as string | undefined
+  
+  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
+  const fyStartDate = fyBounds?.startDate ?? new Date(new Date().getFullYear(), 0, 1)
+  const fyEndDate = fyBounds?.endDate ?? new Date()
+  const fyLabel = fyBounds?.label ?? "Current Year"
   
   const now = new Date()
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
 
   const isCurrentMonth = (date: Date) => date >= currentMonthStart
 
@@ -86,7 +98,7 @@ export default async function DashboardPage() {
         transactions: {
           where: {
             transactionType: "PURCHASE",
-            transactionDate: { gte: sixMonthsAgo }
+            transactionDate: { gte: fyStartDate, lte: fyEndDate }
           },
           select: {
             transactionDate: true,
@@ -103,7 +115,7 @@ export default async function DashboardPage() {
         },
         payments: {
           where: {
-            paymentDate: { gte: sixMonthsAgo }
+            paymentDate: { gte: fyStartDate, lte: fyEndDate }
           },
           select: {
             amount: true,
@@ -142,7 +154,7 @@ export default async function DashboardPage() {
     prisma.transaction.findMany({
       where: {
         transactionType: "PURCHASE",
-        transactionDate: { gte: currentMonthStart }
+        transactionDate: { gte: fyStartDate, lte: fyEndDate }
       },
       orderBy: { transactionDate: "desc" },
       take: 5,
@@ -157,7 +169,7 @@ export default async function DashboardPage() {
     }),
     prisma.payment.findMany({
       where: {
-        paymentDate: { gte: currentMonthStart }
+        paymentDate: { gte: fyStartDate, lte: fyEndDate }
       },
       orderBy: { paymentDate: "desc" },
       take: 5,
@@ -354,14 +366,11 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          {session?.user?.role === 'SUPER_ADMIN' ? 'Global' : 'Zone'} Dashboard
-        </h1>
-        <p className="text-slate-600">
-          Welcome back, {session?.user?.name ?? "Admin"}. Here is your comprehensive overview.
-        </p>
-      </div>
+      <DashboardHeader
+        role={session?.user?.role ?? "CHURCH_USER"}
+        userName={session?.user?.name ?? "Admin"}
+        fyLabel={fyLabel}
+      />
 
       {/* Key Metrics Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
