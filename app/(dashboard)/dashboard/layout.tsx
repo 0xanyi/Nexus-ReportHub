@@ -106,6 +106,20 @@ export default async function DashboardLayout({
           : []),
       ],
     },
+    ...(isAdmin
+      ? [
+          {
+            label: "Settings",
+            items: [
+              {
+                label: "Financial Year",
+                href: "/dashboard/settings/financial-year",
+                description: "Start or reset the current reporting year",
+              },
+            ],
+          },
+        ]
+      : []),
     ...(session.user.role === "SUPER_ADMIN"
       ? [
           {
