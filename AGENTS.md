@@ -409,6 +409,20 @@ A pull request is reviewable when it includes:
 
 ## Recent Fixes & Improvements (January 2026)
 
+### Security Patch for CVE-2025-55182 (React2Shell RCE)
+- ✅ **Fixed**: Upgraded React and Next.js to patch critical RCE vulnerability in React Server Components
+- ✅ **Versions Updated**:
+  - `next`: 16.0.8 → 16.1.0 (includes RSC protocol security fix)
+  - `react`: 19.1.1 → 19.2.3 (addresses unsafe deserialization)
+  - `react-dom`: 19.1.1 → 19.2.3
+- ✅ **Impact**: Prevented unauthenticated RCE attacks via crafted HTTP requests to RSC endpoints
+- ✅ **Severity**: CVSS 10.0 critical vulnerability
+- ✅ **Testing**: All builds passing, linting complete, no breaking changes
+- ✅ **Created**: ESLint 9 compatible flat config (eslint.config.mjs)
+- ✅ **Fixed Code Issues**: 
+  - Resolved variable reassignment in group financial summary calculation
+  - Fixed setState in effect to prevent cascading renders in PaymentHistory pagination
+
 ### Campaign Management System
 - ✅ **Complete Campaign CRUD** - List, create, update, and delete campaigns (Admin only)
 - ✅ **Campaign List Page** - View all campaigns with statistics dashboard
