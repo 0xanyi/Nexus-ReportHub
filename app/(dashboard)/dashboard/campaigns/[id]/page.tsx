@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
-import { getFinancialYearFromParam } from "@/lib/financialYear"
+import { resolveFYFromSearchParams } from "@/lib/financialYear"
 import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
 import { Suspense } from "react"
 
@@ -170,10 +170,8 @@ export default async function CampaignDetailPage({
   const { id } = await params
   const resolvedSearchParams = await searchParams
   const fyParam = resolvedSearchParams.fy as string | undefined
-  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
-  const fyStartDate = fyBounds?.startDate
-  const fyEndDate = fyBounds?.endDate
-  const fyLabel = fyBounds?.label ?? "Current Year"
+  const { startDate: fyStartDate, endDate: fyEndDate, label: fyLabel } =
+    await resolveFYFromSearchParams(fyParam, prisma)
 
   const campaign = await getCampaign(id, fyStartDate, fyEndDate)
 

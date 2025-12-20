@@ -12,7 +12,10 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -60,13 +63,18 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/papaparse": "^5.3.16",
+    "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.36.0",
     "eslint-config-next": "^16.0.8",
+    "jsdom": "^27.3.0",
     "prisma": "^6.16.3",
     "tailwindcss": "^3.4.17",
-    "tsx": "^4.20.6"
+    "tsx": "^4.20.6",
+    "vitest": "^4.0.16"
   }
 }

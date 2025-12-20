@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
-import { getFinancialYearFromParam } from "@/lib/financialYear"
+import { resolveFYFromSearchParams } from "@/lib/financialYear"
 import Link from "next/link"
 import { CampaignGivingOverview } from "@/components/analytics/CampaignGivingOverview"
 import { PaymentSummaryGenerator } from "@/components/reports/PaymentSummaryGenerator"
@@ -24,10 +24,8 @@ export default async function ReportsPage({
 
   const resolvedSearchParams = await searchParams
   const fyParam = resolvedSearchParams.fy as string | undefined
-  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
-  const fyStartDate = fyBounds?.startDate ?? new Date(new Date().getFullYear(), 0, 1)
-  const fyEndDate = fyBounds?.endDate ?? new Date()
-  const fyLabel = fyBounds?.label ?? "Current Year"
+  const { startDate: fyStartDate, endDate: fyEndDate, label: fyLabel } =
+    await resolveFYFromSearchParams(fyParam, prisma)
 
   let department
 

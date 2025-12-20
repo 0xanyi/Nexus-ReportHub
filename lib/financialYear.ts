@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client"
 export type FinancialYearBounds = {
   label: string
   startDate: Date
@@ -54,11 +55,21 @@ export function getResetConfirmationText(fyLabel: string): string {
   return `RESET ${fyLabel}`
 }
 
+/**
+ * Validate FY label format (e.g., "FY2025")
+ */
+const FY_LABEL_PATTERN = /^FY\d{4}$/
+
+export function isValidFYLabel(label: string): boolean {
+  return FY_LABEL_PATTERN.test(label)
+}
+
 export async function getFinancialYearFromParam(
   fyLabel: string | undefined,
-  prisma: { financialYear: { findFirst: (args: { where: object }) => Promise<{ id: string; label: string; startDate: Date; endDate: Date; isCurrent: boolean } | null> } }
+  prisma: Pick<PrismaClient, "financialYear">
 ): Promise<{ startDate: Date; endDate: Date; label: string } | null> {
-  if (fyLabel) {
+  // Validate input format before querying
+  if (fyLabel && isValidFYLabel(fyLabel)) {
     const fy = await prisma.financialYear.findFirst({
       where: { label: fyLabel },
     })
@@ -77,4 +88,37 @@ export async function getFinancialYearFromParam(
 
   const bounds = getFinancialYearBounds(new Date())
   return bounds
+}
+
+/**
+ * Resolved FY bounds with guaranteed non-null values.
+ * Use this in pages to avoid repeating the same resolution logic.
+ */
+export type ResolvedFYBounds = {
+  startDate: Date
+  endDate: Date
+  label: string
+}
+
+/**
+ * Resolve FY bounds from a search param, with proper fallbacks.
+ * Centralizes the repeated pattern across all pages.
+ */
+export async function resolveFYFromSearchParams(
+  fyParam: string | undefined,
+  prisma: Pick<PrismaClient, "financialYear">
+): Promise<ResolvedFYBounds> {
+  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
+  
+  if (fyBounds) {
+    return fyBounds
+  }
+  
+  // Fallback to calculated FY bounds (Dec 1 - Nov 30), not calendar year
+  const calculatedBounds = getFinancialYearBounds(new Date())
+  return {
+    startDate: calculatedBounds.startDate,
+    endDate: calculatedBounds.endDate,
+    label: calculatedBounds.label,
+  }
 }

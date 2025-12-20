@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
-import { getFinancialYearFromParam } from "@/lib/financialYear"
+import { resolveFYFromSearchParams } from "@/lib/financialYear"
 import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
 import { Suspense } from "react"
 
@@ -27,10 +27,8 @@ export default async function UploadHistoryPage({
 
   const resolvedSearchParams = await searchParams
   const fyParam = resolvedSearchParams.fy as string | undefined
-  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
-  const fyStartDate = fyBounds?.startDate ?? new Date(new Date().getFullYear(), 0, 1)
-  const fyEndDate = fyBounds?.endDate ?? new Date()
-  const fyLabel = fyBounds?.label ?? "Current Year"
+  const { startDate: fyStartDate, endDate: fyEndDate, label: fyLabel } =
+    await resolveFYFromSearchParams(fyParam, prisma)
 
   const uploads = await prisma.uploadHistory.findMany({
     where: {
