@@ -16,7 +16,13 @@ type Props = {
   className?: string
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error(`Failed to fetch financial years: ${res.status}`)
+  }
+  return res.json()
+}
 
 export function FinancialYearSelector({ className }: Props) {
   const router = useRouter()

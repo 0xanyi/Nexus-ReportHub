@@ -3,6 +3,31 @@ import autoTable from "jspdf-autotable"
 import ExcelJS from "exceljs"
 import { PaymentSummaryData } from "./payment-summary"
 
+/**
+ * Helper function to download an ExcelJS workbook as a file.
+ * Handles error catching and proper blob URL cleanup.
+ */
+async function downloadWorkbook(workbook: ExcelJS.Workbook, filename: string): Promise<void> {
+  try {
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+    })
+    const url = URL.createObjectURL(blob)
+    try {
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      a.click()
+    } finally {
+      URL.revokeObjectURL(url)
+    }
+  } catch (err) {
+    console.error("Failed to export Excel file:", err)
+    throw err
+  }
+}
+
 interface ChurchData {
   name: string
   group: string
@@ -162,16 +187,9 @@ export function exportChurchToExcel(data: ChurchData) {
     paymentsSheet.getColumn(4).width = 25
   }
   
-  // Save - download via blob in browser
-  void workbook.xlsx.writeBuffer().then((buffer) => {
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${data.name.replace(/ /g, "_")}_Report_${new Date().toISOString().split("T")[0]}.xlsx`
-    a.click()
-    URL.revokeObjectURL(url)
-  })
+  // Save - download with proper error handling and cleanup
+  const filename = `${data.name.replace(/ /g, "_")}_Report_${new Date().toISOString().split("T")[0]}.xlsx`
+  void downloadWorkbook(workbook, filename)
 }
 
 export function exportGroupToPDF(data: GroupData) {
@@ -273,16 +291,9 @@ export function exportGroupToExcel(data: GroupData) {
   churchesSheet.getColumn(4).width = 15
   churchesSheet.getColumn(5).width = 12
   
-  // Save - download via blob in browser
-  void workbook.xlsx.writeBuffer().then((buffer) => {
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${data.name.replace(/ /g, "_")}_Group_Report_${new Date().toISOString().split("T")[0]}.xlsx`
-    a.click()
-    URL.revokeObjectURL(url)
-  })
+  // Save - download with proper error handling and cleanup
+  const filename = `${data.name.replace(/ /g, "_")}_Group_Report_${new Date().toISOString().split("T")[0]}.xlsx`
+  void downloadWorkbook(workbook, filename)
 }
 
 export function exportPaymentSummaryToPDF(data: PaymentSummaryData) {
@@ -469,13 +480,6 @@ export function exportPaymentSummaryToExcel(data: PaymentSummaryData) {
   
   // Save - download via blob in browser
   const filename = data.title.replace(/[^a-z0-9]/gi, "_")
-  void workbook.xlsx.writeBuffer().then((buffer) => {
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${filename}_${new Date().toISOString().split("T")[0]}.xlsx`
-    a.click()
-    URL.revokeObjectURL(url)
-  })
+  const downloadFilename = `${filename}_${new Date().toISOString().split("T")[0]}.xlsx`
+  void downloadWorkbook(workbook, downloadFilename)
 }
