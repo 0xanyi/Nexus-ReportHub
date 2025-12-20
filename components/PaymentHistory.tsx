@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -103,19 +103,15 @@ export function PaymentHistory({
   }, [filteredPayments])
 
   const totalPages = Math.max(1, Math.ceil(groupedPayments.length / groupsPerPage))
+  // Ensure currentPage doesn't exceed totalPages
+  const validPage = Math.min(currentPage, Math.max(1, totalPages))
   const paginatedGroups = groupedPayments.slice(
-    (currentPage - 1) * groupsPerPage,
+    (validPage - 1) * groupsPerPage,
     currentPage * groupsPerPage
   )
 
   // Calculate totals
   const filteredTotal = filteredPayments.reduce((sum, payment) => sum + Number(payment.amount), 0)
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages)
-    }
-  }, [currentPage, totalPages])
 
   const handlePageChange = (page: number) => {
     const nextPage = Math.max(1, Math.min(totalPages, page))

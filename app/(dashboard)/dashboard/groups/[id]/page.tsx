@@ -67,11 +67,6 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
   }
 
   // Calculate financial summary for the entire group
-  let totalOrders = 0
-  let printingPayments = 0
-  let totalCampaigns = 0
-  let totalCopies = 0
-
   const churchSummaries = group.churches.map((church) => {
     const orders = church.transactions.reduce((sum, transaction) => {
       return (
@@ -93,11 +88,6 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       return sum + transaction.lineItems.reduce((lineSum, item) => lineSum + item.quantity, 0)
     }, 0)
 
-    totalOrders += orders
-    printingPayments += printing
-    totalCampaigns += campaigns
-    totalCopies += copies
-
     return {
       id: church.id,
       name: church.name,
@@ -107,6 +97,15 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       balance: printing - orders,
     }
   })
+
+  const totalOrders = churchSummaries.reduce((sum, church) => sum + church.orders, 0)
+  const printingPayments = churchSummaries.reduce((sum, church) => sum + church.payments, 0)
+  const totalCampaigns = churchSummaries.reduce((sum, church) => sum + church.campaigns, 0)
+  const totalCopies = group.churches.reduce((sum, church) => {
+    return sum + church.transactions.reduce((lineSum, transaction) => {
+      return lineSum + transaction.lineItems.reduce((itemSum, item) => itemSum + item.quantity, 0)
+    }, 0)
+  }, 0)
 
   const balance = printingPayments - totalOrders
 
