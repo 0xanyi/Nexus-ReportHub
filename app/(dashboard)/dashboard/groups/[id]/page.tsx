@@ -66,6 +66,12 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
     notFound()
   }
 
+  // Helper function to sum payments by purpose
+  const sumPaymentsByPurpose = (payments: typeof group.churches[0]["payments"], purpose: string) =>
+    payments
+      .filter((p) => p.forPurpose === purpose)
+      .reduce((sum, payment) => sum + Number(payment.amount), 0)
+
   // Calculate financial summary for the entire group
   const churchSummaries = group.churches.map((church) => {
     const orders = church.transactions.reduce((sum, transaction) => {
@@ -75,13 +81,9 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       )
     }, 0)
 
-    const printing = church.payments
-      .filter((p) => p.forPurpose === "PRINTING")
-      .reduce((sum, payment) => sum + Number(payment.amount), 0)
+    const printing = sumPaymentsByPurpose(church.payments, "PRINTING")
 
-    const campaigns = church.payments
-      .filter((p) => p.forPurpose === "SPONSORSHIP")
-      .reduce((sum, payment) => sum + Number(payment.amount), 0)
+    const campaigns = sumPaymentsByPurpose(church.payments, "SPONSORSHIP")
 
     // Count total copies across all transactions
     const copies = church.transactions.reduce((sum, transaction) => {

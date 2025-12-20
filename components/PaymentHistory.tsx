@@ -5,12 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDate } from "@/lib/utils"
-import { Decimal } from "@prisma/client/runtime/library"
 
 interface Payment {
   id: string
   paymentDate: Date
-  amount: number | string | Decimal
+  amount: number | string
   currency: string
   paymentMethod: string
   forPurpose: string
@@ -107,7 +106,7 @@ export function PaymentHistory({
   const validPage = Math.min(currentPage, Math.max(1, totalPages))
   const paginatedGroups = groupedPayments.slice(
     (validPage - 1) * groupsPerPage,
-    currentPage * groupsPerPage
+    validPage * groupsPerPage
   )
 
   // Calculate totals
