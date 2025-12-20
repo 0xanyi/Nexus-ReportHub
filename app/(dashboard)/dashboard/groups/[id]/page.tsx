@@ -7,9 +7,19 @@ import Link from "next/link"
 import { TransactionHistory } from "@/components/TransactionHistory"
 import { PaymentHistory } from "@/components/PaymentHistory"
 import { CampaignBreakdown } from "@/components/churches/CampaignBreakdown"
+import { getFinancialYearFromParam } from "@/lib/financialYear"
+import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
+import { Suspense } from "react"
 
-export default async function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function GroupDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const { id } = await params
+  const resolvedSearchParams = await searchParams
   const session = await auth()
 
   if (!session?.user) {
@@ -18,6 +28,12 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
 
   const isAdmin = session.user.role === "SUPER_ADMIN" || session.user.role === "ZONE_ADMIN"
 
+  const fyParam = resolvedSearchParams.fy as string | undefined
+  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
+  const fyStartDate = fyBounds?.startDate ?? new Date(new Date().getFullYear(), 0, 1)
+  const fyEndDate = fyBounds?.endDate ?? new Date()
+  const fyLabel = fyBounds?.label ?? "Current Year"
+
   const group = await prisma.group.findUnique({
     where: { id },
     include: {
@@ -25,6 +41,12 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       churches: {
         include: {
           transactions: {
+            where: {
+              transactionDate: {
+                gte: fyStartDate,
+                lte: fyEndDate,
+              },
+            },
             include: {
               lineItems: {
                 include: {
@@ -42,6 +64,12 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
             },
           },
           payments: {
+            where: {
+              paymentDate: {
+                gte: fyStartDate,
+                lte: fyEndDate,
+              },
+            },
             include: {
               uploader: {
                 select: {
@@ -180,8 +208,14 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
           <p className="mt-1 text-sm text-slate-500">
             {group.zone.name} • {group.churches.length} churches
           </p>
+          <p className="text-sm text-slate-500">
+            Viewing <span className="font-semibold">{fyLabel}</span>
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <Suspense fallback={<div className="h-10 w-32 animate-pulse rounded-md bg-slate-100" />}>
+            <FinancialYearSelector />
+          </Suspense>
           <Link
             href="/dashboard/reports"
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"

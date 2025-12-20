@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ChurchListView } from "@/components/ChurchListView"
 import { ChurchBulkUpload } from "@/components/churches/BulkUpload"
+import { getFinancialYearFromParam } from "@/lib/financialYear"
+import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
+import { Suspense } from "react"
 
-export default async function ChurchesPage() {
+export default async function ChurchesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const session = await auth()
 
   if (!session?.user) {
@@ -15,6 +22,13 @@ export default async function ChurchesPage() {
   }
 
   const isAdmin = session.user.role === "SUPER_ADMIN" || session.user.role === "ZONE_ADMIN"
+
+  const resolvedSearchParams = await searchParams
+  const fyParam = resolvedSearchParams.fy as string | undefined
+  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
+  const fyStartDate = fyBounds?.startDate ?? new Date(new Date().getFullYear(), 0, 1)
+  const fyEndDate = fyBounds?.endDate ?? new Date()
+  const fyLabel = fyBounds?.label ?? "Current Year"
 
   const churches = await prisma.church.findMany({
     include: {
@@ -24,15 +38,28 @@ export default async function ChurchesPage() {
         },
       },
       transactions: {
+        where: {
+          transactionDate: {
+            gte: fyStartDate,
+            lte: fyEndDate,
+          },
+        },
         include: {
           lineItems: true,
         },
       },
-      payments: true,
+      payments: {
+        where: {
+          paymentDate: {
+            gte: fyStartDate,
+            lte: fyEndDate,
+          },
+        },
+      },
       _count: {
         select: {
-          transactions: true,
-          payments: true,
+          transactions: { where: { transactionDate: { gte: fyStartDate, lte: fyEndDate } } },
+          payments: { where: { paymentDate: { gte: fyStartDate, lte: fyEndDate } } },
         },
       },
     },
@@ -77,21 +104,27 @@ export default async function ChurchesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Churches</h2>
           <p className="text-muted-foreground">
-            View all churches and their transaction summaries
+            View all churches and their transaction summaries.{" "}
+            Viewing <span className="font-semibold">{fyLabel}</span>.
           </p>
         </div>
-        {isAdmin && (
-          <div className="flex gap-2">
-            <ChurchBulkUpload />
-            <Link href="/dashboard/churches/new">
-              <Button>Add New Church</Button>
-            </Link>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <Suspense fallback={<div className="h-10 w-32 animate-pulse rounded-md bg-slate-100" />}>
+            <FinancialYearSelector />
+          </Suspense>
+          {isAdmin && (
+            <>
+              <ChurchBulkUpload />
+              <Link href="/dashboard/churches/new">
+                <Button>Add New Church</Button>
+              </Link>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
