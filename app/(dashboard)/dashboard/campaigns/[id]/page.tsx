@@ -3,6 +3,9 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
+import { getFinancialYearFromParam } from "@/lib/financialYear"
+import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
+import { Suspense } from "react"
 
 interface CampaignDetail {
   id: string
@@ -35,7 +38,11 @@ interface CampaignDetail {
   updatedAt: string
 }
 
-async function getCampaign(id: string): Promise<CampaignDetail> {
+async function getCampaign(
+  id: string,
+  startDate?: Date,
+  endDate?: Date
+): Promise<CampaignDetail> {
   const campaign = await prisma.campaignCategory.findUnique({
     where: { id },
     include: {
@@ -46,6 +53,14 @@ async function getCampaign(id: string): Promise<CampaignDetail> {
         },
       },
       payments: {
+        where: startDate && endDate
+          ? {
+              paymentDate: {
+                gte: startDate,
+                lte: endDate,
+              },
+            }
+          : {},
         include: {
           church: {
             include: {
@@ -141,8 +156,10 @@ async function getCampaign(id: string): Promise<CampaignDetail> {
 
 export default async function CampaignDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const session = await auth()
 
@@ -151,7 +168,14 @@ export default async function CampaignDetailPage({
   }
 
   const { id } = await params
-  const campaign = await getCampaign(id)
+  const resolvedSearchParams = await searchParams
+  const fyParam = resolvedSearchParams.fy as string | undefined
+  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
+  const fyStartDate = fyBounds?.startDate
+  const fyEndDate = fyBounds?.endDate
+  const fyLabel = fyBounds?.label ?? "Current Year"
+
+  const campaign = await getCampaign(id, fyStartDate, fyEndDate)
 
   return (
     <div className="space-y-8">
@@ -185,7 +209,15 @@ export default async function CampaignDetailPage({
               </span>
             )}
           </div>
-          <p className="mt-2 text-slate-600">{campaign.department.name}</p>
+          <p className="mt-2 text-slate-600">
+            {campaign.department.name} • Viewing{" "}
+            <span className="font-semibold">{fyLabel}</span>
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+          <Suspense fallback={<div className="h-10 w-32 animate-pulse rounded-md bg-slate-100" />}>
+            <FinancialYearSelector />
+          </Suspense>
         </div>
       </div>
 

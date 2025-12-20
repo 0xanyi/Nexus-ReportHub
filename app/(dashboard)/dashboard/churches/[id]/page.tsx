@@ -8,9 +8,19 @@ import { ExportButtons } from "@/components/ExportButtons"
 import { PaymentHistory } from "@/components/PaymentHistory"
 import { CampaignBreakdown } from "@/components/churches/CampaignBreakdown"
 import { ChurchOrdersManager } from "@/components/churches/ChurchOrdersManager"
+import { getFinancialYearFromParam } from "@/lib/financialYear"
+import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
+import { Suspense } from "react"
 
-export default async function ChurchDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ChurchDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const { id } = await params
+  const resolvedSearchParams = await searchParams
   const session = await auth()
 
   if (!session?.user) {
@@ -18,6 +28,12 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
   }
 
   const isAdmin = session.user.role === "SUPER_ADMIN" || session.user.role === "ZONE_ADMIN"
+
+  const fyParam = resolvedSearchParams.fy as string | undefined
+  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
+  const fyStartDate = fyBounds?.startDate ?? new Date(new Date().getFullYear(), 0, 1)
+  const fyEndDate = fyBounds?.endDate ?? new Date()
+  const fyLabel = fyBounds?.label ?? "Current Year"
 
   const church = await prisma.church.findUnique({
     where: { id },
@@ -28,6 +44,12 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
         },
       },
       transactions: {
+        where: {
+          transactionDate: {
+            gte: fyStartDate,
+            lte: fyEndDate,
+          },
+        },
         include: {
           lineItems: {
             include: {
@@ -45,6 +67,12 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
         },
       },
       payments: {
+        where: {
+          paymentDate: {
+            gte: fyStartDate,
+            lte: fyEndDate,
+          },
+        },
         include: {
           uploader: {
             select: {
@@ -116,9 +144,7 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
   }, {} as Record<string, { quantity: number; totalAmount: number }>)
 
   // Calculate monthly summary for current year
-  const currentYear = new Date().getFullYear()
   const monthlySummary = church.transactions
-    .filter((t) => new Date(t.transactionDate).getFullYear() === currentYear)
     .reduce((acc, transaction) => {
       const month = new Date(transaction.transactionDate).toLocaleString("default", {
         month: "short",
@@ -147,8 +173,11 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">{church.name}</h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mt-1">
               {church.group.name} • {church.group.zone.name}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Viewing <span className="font-semibold">{fyLabel}</span>
             </p>
           </div>
           <div className="flex gap-2">
@@ -183,6 +212,9 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
                 </button>
               </Link>
             )}
+            <Suspense fallback={<div className="h-10 w-32 animate-pulse rounded-md bg-slate-100" />}>
+              <FinancialYearSelector />
+            </Suspense>
           </div>
         </div>
       </div>
@@ -287,8 +319,8 @@ export default async function ChurchDetailPage({ params }: { params: Promise<{ i
       {Object.keys(monthlySummary).length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Summary {currentYear}</CardTitle>
-            <CardDescription>Orders by month this year</CardDescription>
+            <CardTitle>Monthly Summary</CardTitle>
+            <CardDescription>Orders by month for {fyLabel}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-6">

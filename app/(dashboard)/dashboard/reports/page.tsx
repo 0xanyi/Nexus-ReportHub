@@ -247,7 +247,7 @@ export default async function ReportsPage({
   })
 
   // Get campaign categories for Campaign Giving Overview
-  const campaignCategories = await getCampaignCategorySummaries(department.id)
+  const campaignCategories = await getCampaignCategorySummaries(department.id, fyStartDate, fyEndDate)
 
   // Calculate total campaigns amount
   const totalCampaigns = campaignCategories.reduce((sum, cat) => sum + cat.totalAmount, 0)

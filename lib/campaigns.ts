@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma"
 
+type DateRange = { startDate?: Date; endDate?: Date }
+
 interface CampaignChurchSummary {
   id: string
   name: string
@@ -32,13 +34,25 @@ export interface CampaignCategorySummary {
   groups: CampaignGroupSummary[]
 }
 
-export async function getCampaignCategorySummaries(departmentId: string) {
+export async function getCampaignCategorySummaries(
+  departmentId: string,
+  startDate?: Date,
+  endDate?: Date
+) {
   const categories = await prisma.campaignCategory.findMany({
     where: { departmentId },
     include: {
       payments: {
         where: {
           forPurpose: "SPONSORSHIP",
+          ...(startDate && endDate
+            ? {
+                paymentDate: {
+                  gte: startDate,
+                  lte: endDate,
+                },
+              }
+            : {}),
         },
         include: {
           church: {
