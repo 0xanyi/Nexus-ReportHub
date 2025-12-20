@@ -191,6 +191,10 @@ export default async function DashboardPage({
     })
   ])
 
+  // Create lookup maps for O(1) access instead of O(n) .find() calls
+  const groupLookup = new Map(groups.map(g => [g.id, g]))
+  const zoneLookup = new Map(zones.map(z => [z.id, z]))
+
   // Process data for metrics
   let totalOrdersValue = 0
   let totalPaymentsValue = 0
@@ -261,7 +265,7 @@ export default async function DashboardPage({
     })
 
     // Aggregate by group and zone
-    const group = groups.find(g => g.id === church.groupId)
+    const group = groupLookup.get(church.groupId)
     if (group) {
       // Update group metrics
       const existingGroup = groupMetrics.get(group.id) || {
@@ -279,7 +283,7 @@ export default async function DashboardPage({
       })
 
       // Update zone metrics
-      const zone = zones.find(z => z.id === group.zoneId)
+      const zone = zoneLookup.get(group.zoneId)
       if (zone) {
         const existing = zoneMetrics.get(zone.id) || { name: zone.name, totalOrders: 0, totalPayments: 0, churchCount: 0 }
         zoneMetrics.set(zone.id, {

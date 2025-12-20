@@ -10,14 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-
-type FinancialYear = {
-  id: string
-  label: string
-  startDate: string
-  endDate: string
-  isCurrent: boolean
-}
+import type { FinancialYear } from "@/types/financial-year"
 
 type Props = {
   className?: string

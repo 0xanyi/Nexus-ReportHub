@@ -15,25 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-type FinancialYear = {
-  id: string
-  label: string
-  startDate: string | Date
-  endDate: string | Date
-  isCurrent: boolean
-}
-
-type FinancialYearWithCounts = FinancialYear & {
-  transactionCount: number
-  paymentCount: number
-  uploadCount: number
-}
-
-type ResetPreview = {
-  payments: number
-  transactions: number
-  uploads: number
-}
+import type { FinancialYear, FinancialYearWithCounts, ResetPreview } from "@/types/financial-year"
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -179,6 +161,32 @@ export default function FinancialYearManager({
       setShowAdvanceDialog(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start next financial year")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleReset = async () => {
+    if (!current) return
+    setError(null)
+    setLoading(true)
+    try {
+      await fetchJson<{
+        paymentsDeleted: number
+        transactionsDeleted: number
+        uploadsDeleted: number
+      }>(`/api/financial-years/${current.id}/reset`, {
+        method: "POST",
+        body: JSON.stringify({ confirmation: resetConfirmation }),
+      })
+
+      const refreshed = await fetchJson<{ financialYear: FinancialYear }>(
+        "/api/financial-years/current"
+      )
+      setCurrent(refreshed.financialYear)
+      setResetConfirmation("")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reset financial year")
     } finally {
       setLoading(false)
     }
@@ -380,33 +388,7 @@ export default function FinancialYearManager({
           <Button
             variant="destructive"
             disabled={!current || loading || resetConfirmation !== expectedConfirmation}
-            onClick={() => {
-              if (!current) return
-              setError(null)
-              setLoading(true)
-              void (async () => {
-                try {
-                  await fetchJson<{
-                    paymentsDeleted: number
-                    transactionsDeleted: number
-                    uploadsDeleted: number
-                  }>(`/api/financial-years/${current.id}/reset`, {
-                    method: "POST",
-                    body: JSON.stringify({ confirmation: resetConfirmation }),
-                  })
-
-                  const refreshed = await fetchJson<{ financialYear: FinancialYear }>(
-                    "/api/financial-years/current"
-                  )
-                  setCurrent(refreshed.financialYear)
-                  setResetConfirmation("")
-                } catch (err) {
-                  setError(err instanceof Error ? err.message : "Failed to reset financial year")
-                } finally {
-                  setLoading(false)
-                }
-              })()
-            }}
+            onClick={() => void handleReset()}
           >
             Reset This Financial Year
           </Button>
