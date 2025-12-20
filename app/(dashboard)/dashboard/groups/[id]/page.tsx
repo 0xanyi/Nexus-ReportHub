@@ -66,12 +66,13 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
     notFound()
   }
 
-  // Calculate financial summary for the entire group
-  let totalOrders = 0
-  let printingPayments = 0
-  let totalCampaigns = 0
-  let totalCopies = 0
+  // Helper function to sum payments by purpose
+  const sumPaymentsByPurpose = (payments: typeof group.churches[0]["payments"], purpose: string) =>
+    payments
+      .filter((p) => p.forPurpose === purpose)
+      .reduce((sum, payment) => sum + Number(payment.amount), 0)
 
+  // Calculate financial summary for the entire group
   const churchSummaries = group.churches.map((church) => {
     const orders = church.transactions.reduce((sum, transaction) => {
       return (
@@ -80,23 +81,14 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       )
     }, 0)
 
-    const printing = church.payments
-      .filter((p) => p.forPurpose === "PRINTING")
-      .reduce((sum, payment) => sum + Number(payment.amount), 0)
+    const printing = sumPaymentsByPurpose(church.payments, "PRINTING")
 
-    const campaigns = church.payments
-      .filter((p) => p.forPurpose === "SPONSORSHIP")
-      .reduce((sum, payment) => sum + Number(payment.amount), 0)
+    const campaigns = sumPaymentsByPurpose(church.payments, "SPONSORSHIP")
 
     // Count total copies across all transactions
     const copies = church.transactions.reduce((sum, transaction) => {
       return sum + transaction.lineItems.reduce((lineSum, item) => lineSum + item.quantity, 0)
     }, 0)
-
-    totalOrders += orders
-    printingPayments += printing
-    totalCampaigns += campaigns
-    totalCopies += copies
 
     return {
       id: church.id,
@@ -107,6 +99,15 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       balance: printing - orders,
     }
   })
+
+  const totalOrders = churchSummaries.reduce((sum, church) => sum + church.orders, 0)
+  const printingPayments = churchSummaries.reduce((sum, church) => sum + church.payments, 0)
+  const totalCampaigns = churchSummaries.reduce((sum, church) => sum + church.campaigns, 0)
+  const totalCopies = group.churches.reduce((sum, church) => {
+    return sum + church.transactions.reduce((lineSum, transaction) => {
+      return lineSum + transaction.lineItems.reduce((itemSum, item) => itemSum + item.quantity, 0)
+    }, 0)
+  }, 0)
 
   const balance = printingPayments - totalOrders
 
