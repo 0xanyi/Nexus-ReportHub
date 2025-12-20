@@ -12,18 +12,34 @@ export async function validateCsrfToken(): Promise<boolean> {
   const referer = headersList.get("referer")
   const host = headersList.get("host")
   
+  // Fail closed: if neither origin nor referer is present, reject the request
+  // This prevents CSRF attacks that strip both headers
+  if (!origin && !referer) {
+    return false
+  }
+  
   // If origin header exists, it should match our host
   if (origin) {
-    const originUrl = new URL(origin)
-    if (originUrl.host !== host) {
+    try {
+      const originUrl = new URL(origin)
+      if (originUrl.host !== host) {
+        return false
+      }
+    } catch {
+      // Malformed origin URL - fail closed
       return false
     }
   }
   
   // If referer header exists, it should be from our domain
   if (referer) {
-    const refererUrl = new URL(referer)
-    if (refererUrl.host !== host) {
+    try {
+      const refererUrl = new URL(referer)
+      if (refererUrl.host !== host) {
+        return false
+      }
+    } catch {
+      // Malformed referer URL - fail closed
       return false
     }
   }

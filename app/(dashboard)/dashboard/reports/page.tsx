@@ -3,17 +3,31 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
+import { getFinancialYearFromParam } from "@/lib/financialYear"
 import Link from "next/link"
 import { CampaignGivingOverview } from "@/components/analytics/CampaignGivingOverview"
 import { PaymentSummaryGenerator } from "@/components/reports/PaymentSummaryGenerator"
 import { getCampaignCategorySummaries } from "@/lib/campaigns"
+import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
+import { Suspense } from "react"
 
-export default async function ReportsPage() {
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const session = await auth()
 
   if (!session?.user) {
     redirect("/login")
   }
+
+  const resolvedSearchParams = await searchParams
+  const fyParam = resolvedSearchParams.fy as string | undefined
+  const fyBounds = await getFinancialYearFromParam(fyParam, prisma)
+  const fyStartDate = fyBounds?.startDate ?? new Date(new Date().getFullYear(), 0, 1)
+  const fyEndDate = fyBounds?.endDate ?? new Date()
+  const fyLabel = fyBounds?.label ?? "Current Year"
 
   let department
 
@@ -41,7 +55,7 @@ export default async function ReportsPage() {
     )
   }
 
-  // Get all churches with their transactions and payments
+  // Get all churches with their transactions and payments filtered by FY
   const churches = await prisma.church.findMany({
     include: {
       group: {
@@ -50,6 +64,12 @@ export default async function ReportsPage() {
         },
       },
       transactions: {
+        where: {
+          transactionDate: {
+            gte: fyStartDate,
+            lte: fyEndDate,
+          },
+        },
         include: {
           lineItems: {
             include: {
@@ -58,7 +78,14 @@ export default async function ReportsPage() {
           },
         },
       },
-      payments: true,
+      payments: {
+        where: {
+          paymentDate: {
+            gte: fyStartDate,
+            lte: fyEndDate,
+          },
+        },
+      },
     },
     orderBy: {
       name: "asc",
@@ -180,8 +207,14 @@ export default async function ReportsPage() {
     }))
     .sort((a, b) => b.payments - a.payments)
 
-  // Get recent transactions
+  // Get recent transactions filtered by FY
   const recentTransactions = await prisma.transaction.findMany({
+    where: {
+      transactionDate: {
+        gte: fyStartDate,
+        lte: fyEndDate,
+      },
+    },
     include: {
       church: true,
       lineItems: {
@@ -221,20 +254,24 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-col gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-          Financial Reports
-        </h1>
-        <p className="text-sm text-slate-500">
-          View consolidated balances, remittance rates, and the latest activity across the
-          network. Charts now live inside the dedicated analytics workspace.
-        </p>
-        <Link
-          href="/dashboard/analytics"
-          className="inline-flex w-fit items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
-        >
-          Jump to Analytics
-        </Link>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+            Financial Reports
+          </h1>
+          <p className="text-sm text-slate-500">
+            Viewing data for <span className="font-semibold">{fyLabel}</span>. View consolidated balances, remittance rates, and the latest activity across the network.
+          </p>
+          <Link
+            href="/dashboard/analytics"
+            className="inline-flex w-fit items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
+          >
+            Jump to Analytics
+          </Link>
+        </div>
+        <Suspense fallback={<div className="h-10 w-32 animate-pulse rounded-md bg-slate-100" />}>
+          <FinancialYearSelector />
+        </Suspense>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
