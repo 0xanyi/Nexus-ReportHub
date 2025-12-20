@@ -1,6 +1,6 @@
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
-import * as XLSX from "xlsx"
+import ExcelJS from "exceljs"
 import { PaymentSummaryData } from "./payment-summary"
 
 interface ChurchData {
@@ -114,10 +114,11 @@ export function exportChurchToPDF(data: ChurchData) {
 }
 
 export function exportChurchToExcel(data: ChurchData) {
-  const workbook = XLSX.utils.book_new()
+  const workbook = new ExcelJS.Workbook()
   
   // Summary Sheet
-  const summaryData = [
+  const summarySheet = workbook.addWorksheet("Summary")
+  summarySheet.addRows([
     ["Church Financial Report"],
     [],
     ["Church", data.name],
@@ -130,35 +131,47 @@ export function exportChurchToExcel(data: ChurchData) {
     ["Total Payments", data.totalPayments],
     ["Balance", data.balance],
     ["Status", data.balance < 0 ? "Owed" : "Credit"],
-  ]
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData)
-  XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary")
+  ])
+  summarySheet.getColumn(1).width = 20
+  summarySheet.getColumn(2).width = 30
   
   // Transactions Sheet
   if (data.transactions.length > 0) {
-    const transactionsData = [
-      ["Date", "Products", "Amount"],
-      ...data.transactions.map((t) => [t.date, t.products, t.amount]),
-    ]
-    const transactionsSheet = XLSX.utils.aoa_to_sheet(transactionsData)
-    XLSX.utils.book_append_sheet(workbook, transactionsSheet, "Transactions")
+    const transactionsSheet = workbook.addWorksheet("Transactions")
+    transactionsSheet.addRow(["Date", "Products", "Amount"])
+    transactionsSheet.getRow(1).font = { bold: true }
+    data.transactions.forEach((t) => {
+      transactionsSheet.addRow([t.date, t.products, t.amount])
+    })
+    transactionsSheet.getColumn(1).width = 15
+    transactionsSheet.getColumn(2).width = 40
+    transactionsSheet.getColumn(3).width = 15
   }
   
   // Payments Sheet
   if (data.payments.length > 0) {
-    const paymentsData = [
-      ["Date", "Method", "Amount", "Reference"],
-      ...data.payments.map((p) => [p.date, p.method, p.amount, p.reference || ""]),
-    ]
-    const paymentsSheet = XLSX.utils.aoa_to_sheet(paymentsData)
-    XLSX.utils.book_append_sheet(workbook, paymentsSheet, "Payments")
+    const paymentsSheet = workbook.addWorksheet("Payments")
+    paymentsSheet.addRow(["Date", "Method", "Amount", "Reference"])
+    paymentsSheet.getRow(1).font = { bold: true }
+    data.payments.forEach((p) => {
+      paymentsSheet.addRow([p.date, p.method, p.amount, p.reference || ""])
+    })
+    paymentsSheet.getColumn(1).width = 15
+    paymentsSheet.getColumn(2).width = 20
+    paymentsSheet.getColumn(3).width = 15
+    paymentsSheet.getColumn(4).width = 25
   }
   
-  // Save
-  XLSX.writeFile(
-    workbook,
-    `${data.name.replace(/ /g, "_")}_Report_${new Date().toISOString().split("T")[0]}.xlsx`
-  )
+  // Save - download via blob in browser
+  void workbook.xlsx.writeBuffer().then((buffer) => {
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${data.name.replace(/ /g, "_")}_Report_${new Date().toISOString().split("T")[0]}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+  })
 }
 
 export function exportGroupToPDF(data: GroupData) {
@@ -220,10 +233,11 @@ export function exportGroupToPDF(data: GroupData) {
 }
 
 export function exportGroupToExcel(data: GroupData) {
-  const workbook = XLSX.utils.book_new()
+  const workbook = new ExcelJS.Workbook()
   
   // Summary Sheet
-  const summaryData = [
+  const summarySheet = workbook.addWorksheet("Summary")
+  summarySheet.addRows([
     ["Group Financial Report"],
     [],
     ["Group", data.name],
@@ -236,29 +250,39 @@ export function exportGroupToExcel(data: GroupData) {
     ["Total Payments", data.totalPayments],
     ["Total Balance", data.totalBalance],
     ["Status", data.totalBalance < 0 ? "Owed" : "Credit"],
-  ]
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData)
-  XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary")
+  ])
+  summarySheet.getColumn(1).width = 20
+  summarySheet.getColumn(2).width = 30
   
   // Churches Sheet
-  const churchesData = [
-    ["Church", "Orders", "Payments", "Balance", "Status"],
-    ...data.churches.map((c) => [
+  const churchesSheet = workbook.addWorksheet("Churches")
+  churchesSheet.addRow(["Church", "Orders", "Payments", "Balance", "Status"])
+  churchesSheet.getRow(1).font = { bold: true }
+  data.churches.forEach((c) => {
+    churchesSheet.addRow([
       c.name,
       c.orders,
       c.payments,
       Math.abs(c.balance),
       c.balance < 0 ? "Owed" : "Credit",
-    ]),
-  ]
-  const churchesSheet = XLSX.utils.aoa_to_sheet(churchesData)
-  XLSX.utils.book_append_sheet(workbook, churchesSheet, "Churches")
+    ])
+  })
+  churchesSheet.getColumn(1).width = 30
+  churchesSheet.getColumn(2).width = 15
+  churchesSheet.getColumn(3).width = 15
+  churchesSheet.getColumn(4).width = 15
+  churchesSheet.getColumn(5).width = 12
   
-  // Save
-  XLSX.writeFile(
-    workbook,
-    `${data.name.replace(/ /g, "_")}_Group_Report_${new Date().toISOString().split("T")[0]}.xlsx`
-  )
+  // Save - download via blob in browser
+  void workbook.xlsx.writeBuffer().then((buffer) => {
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${data.name.replace(/ /g, "_")}_Group_Report_${new Date().toISOString().split("T")[0]}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+  })
 }
 
 export function exportPaymentSummaryToPDF(data: PaymentSummaryData) {
@@ -376,15 +400,22 @@ export function exportPaymentSummaryToPDF(data: PaymentSummaryData) {
 }
 
 export function exportPaymentSummaryToExcel(data: PaymentSummaryData) {
-  const workbook = XLSX.utils.book_new()
+  const workbook = new ExcelJS.Workbook()
+  const worksheet = workbook.addWorksheet("Payment Summary")
   
-  // Create data array
-  const excelData = [
-    [data.title],
-    [],
-    ["S/N", "MONTH", "PRINT", "", "SPONSORSHIP / PROJECTS / CAMPAIGNS PAYMENT", "", "", "GROUPS ONLINE CAMPAIGN", ""],
-    ["", "", "POUNDS", "ESPEES", "POUNDS", "NAIRA", "ESPEES", "POUNDS", "ESPEES"],
-    ...data.months.map((month, index) => [
+  // Title row
+  worksheet.addRow([data.title])
+  worksheet.addRow([])
+  
+  // Header rows
+  worksheet.addRow(["S/N", "MONTH", "PRINT", "", "SPONSORSHIP / PROJECTS / CAMPAIGNS PAYMENT", "", "", "GROUPS ONLINE CAMPAIGN", ""])
+  worksheet.addRow(["", "", "POUNDS", "ESPEES", "POUNDS", "NAIRA", "ESPEES", "POUNDS", "ESPEES"])
+  worksheet.getRow(3).font = { bold: true }
+  worksheet.getRow(4).font = { bold: true }
+  
+  // Data rows
+  data.months.forEach((month, index) => {
+    worksheet.addRow([
       index + 1,
       month.monthName,
       month.printIncomePounds || "",
@@ -394,49 +425,57 @@ export function exportPaymentSummaryToExcel(data: PaymentSummaryData) {
       month.zoneEspeesPayment || "",
       month.groupLinksPounds || "",
       month.groupLinksEspees || "",
-    ]),
-    [
-      "",
-      "TOTAL",
-      data.totals.printIncomePounds,
-      data.totals.printIncomeEspees,
-      data.totals.zonePoundPayment,
-      data.totals.zoneNairaPayment,
-      data.totals.zoneEspeesPayment,
-      data.totals.groupLinksPounds,
-      data.totals.groupLinksEspees,
-    ],
-    [
-      "",
-      "GRAND TOTAL:",
-      data.totals.printIncomePounds,
-      data.totals.printIncomeEspees,
-      data.totals.zonePoundPayment,
-      data.totals.zoneNairaPayment,
-      data.totals.zoneEspeesPayment,
-      data.totals.groupLinksPounds,
-      data.totals.groupLinksEspees,
-    ],
-  ]
+    ])
+  })
   
-  const worksheet = XLSX.utils.aoa_to_sheet(excelData)
+  // Total row
+  const totalRow = worksheet.addRow([
+    "",
+    "TOTAL",
+    data.totals.printIncomePounds,
+    data.totals.printIncomeEspees,
+    data.totals.zonePoundPayment,
+    data.totals.zoneNairaPayment,
+    data.totals.zoneEspeesPayment,
+    data.totals.groupLinksPounds,
+    data.totals.groupLinksEspees,
+  ])
+  totalRow.font = { bold: true }
+  
+  // Grand total row
+  const grandTotalRow = worksheet.addRow([
+    "",
+    "GRAND TOTAL:",
+    data.totals.printIncomePounds,
+    data.totals.printIncomeEspees,
+    data.totals.zonePoundPayment,
+    data.totals.zoneNairaPayment,
+    data.totals.zoneEspeesPayment,
+    data.totals.groupLinksPounds,
+    data.totals.groupLinksEspees,
+  ])
+  grandTotalRow.font = { bold: true }
   
   // Set column widths
-  worksheet["!cols"] = [
-    { wch: 5 },   // S/N
-    { wch: 15 },  // Month
-    { wch: 15 },  // Print Income
-    { wch: 20 },  // Reachout World
-    { wch: 15 },  // Zone Pound
-    { wch: 15 },  // Naira
-    { wch: 15 },  // Espees
-    { wch: 15 },  // Group Links Pounds
-    { wch: 15 },  // Group Links Espees
-  ]
+  worksheet.getColumn(1).width = 5
+  worksheet.getColumn(2).width = 15
+  worksheet.getColumn(3).width = 15
+  worksheet.getColumn(4).width = 15
+  worksheet.getColumn(5).width = 15
+  worksheet.getColumn(6).width = 15
+  worksheet.getColumn(7).width = 15
+  worksheet.getColumn(8).width = 15
+  worksheet.getColumn(9).width = 15
   
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Payment Summary")
-  
-  // Save
+  // Save - download via blob in browser
   const filename = data.title.replace(/[^a-z0-9]/gi, "_")
-  XLSX.writeFile(workbook, `${filename}_${new Date().toISOString().split("T")[0]}.xlsx`)
+  void workbook.xlsx.writeBuffer().then((buffer) => {
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${filename}_${new Date().toISOString().split("T")[0]}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+  })
 }
