@@ -8,6 +8,9 @@ A comprehensive church financial and inventory management system for Rhapsody of
 • **Build**: `npm run build` - Type-check, generate Prisma client, and build for production
 • **Production**: `npm run start` - Start production server (requires build first)
 • **Lint**: `npm run lint` - Run ESLint on all TypeScript files
+• **Test**: `npm run test` - Run unit tests with Vitest (watch mode)
+• **Test Run**: `npm run test:run` - Run unit tests once
+• **Test Coverage**: `npm run test:coverage` - Generate test coverage report
 • **Database Push**: `npm run db:push` - Push Prisma schema changes to database
 • **Database Migration**: `npm run db:migrate` - Create and apply migration
 • **Database Studio**: `npm run db:studio` - Open Prisma Studio at http://localhost:5555
@@ -618,16 +621,16 @@ R2_PUBLIC_URL="https://....r2.cloudflarestorage.com"
 ### Issue: CSV import fails silently
 - **Solution**: Check console logs, validate CSV format matches expected schema
 
-## Testing Strategy (To Be Implemented)
+## Testing Strategy
 
-When adding tests:
+The project uses **Vitest** for unit testing and **Testing Library** for component testing.
 
-• **Unit tests**: Pure functions in `lib/` (formatCurrency, generateR2Key, etc.)
-• **Integration tests**: API routes and Server Actions
-• **E2E tests**: Critical user flows (login, upload CSV, generate report)
-• **Test location**: Co-locate with code or in `__tests__/` directory
+• **Unit tests**: Located in `**/__tests__/*.test.ts`. Focus on pure functions and business logic.
+• **Integration tests**: (Planned) API routes and Server Actions.
+• **E2E tests**: (Planned) Critical user flows using Playwright.
+• **Test location**: Co-located in `__tests__/` subdirectories.
 • **Coverage target**: >80% for core business logic
-• **Run tests**: `npm test` (once test suite is set up)
+• **Run tests**: `npm run test` or `npm run test:run`
 
 ## Performance Guidelines
 
@@ -655,7 +658,7 @@ Before deploying to production:
 - [Next.js 15 Docs](https://nextjs.org/docs)
 - [Prisma Documentation](https://www.prisma.io/docs)
 - [NextAuth.js v5](https://authjs.dev)
-- [Tailwind CSS](https://tailwindcss.com/docs)
+- [Tailwind CSS](https://tailwindcss.com)
 - [shadcn/ui Components](https://ui.shadcn.com)
 - [React Hook Form](https://react-hook-form.com)
 - [Zod Validation](https://zod.dev)
@@ -669,11 +672,13 @@ Before deploying to production:
 
 **Project Status**: Production Ready ✅  
 **Current Phase**: All Major Features Implemented & Deployed  
-**Version**: 2.5.0  
-**License**: ISC  
 **Maintainer**: admin@nexusreporthub.com
+**Last Updated**: January 2026
 
-### Implemented Features (v2.5.0)
+**Version**: 2.6.0  
+**License**: ISC
+
+### Implemented Features (v2.6.0)
 
 #### Core Features
 ✅ Authentication & Role-Based Access Control (4 roles)  
@@ -694,6 +699,8 @@ Before deploying to production:
 ✅ Transaction & Payment Tracking  
 ✅ Upload History & Audit Trails  
 ✅ Multi-Currency Support (GBP, USD, EUR, NGN, ESPEES)  
+✅ **Financial Year Filtering** - Historical data scoping (Dec 1 - Nov 30)
+✅ **Unit Testing Suite** - 12+ tests with Vitest and Testing Library
 
 #### Advanced Features (v2.2.0)
 ✅ **Advanced Analytics Dashboard**
@@ -756,7 +763,15 @@ The application is fully deployed and production-ready:
 - ✅ Build passing (34.2KB middleware)
 - ✅ Security hardened (bcrypt, JWT, role checks)
 
-### Recent Updates (v2.5.0)
+### Recent Updates (v2.6.0)
+
+**Financial Year Filtering & Testing Architecture** (Jan 2026)
+- ✅ **Financial Year Filtering**: Implemented historical year selection (Dec 1 - Nov 30) across 7 major pages
+- ✅ **Code Reusability**: Extracted `resolveFYFromSearchParams()` utility, eliminating ~70 lines of duplicate code
+- ✅ **Testing Infrastructure**: Set up Vitest, Testing Library, and jsdom with path alias support
+- ✅ **Unit Test Suite**: Added 12 comprehensive tests for financial year logic and campaign data processing
+- ✅ **Input Validation**: Integrated regex-based FY label validation (`FY\d{4}`) for application safety
+- ✅ **Type Safety**: Upgraded Prisma type annotations and created `ResolvedFYBounds` guaranteed types
 
 **Church Financial Display Enhancements** (Jan 2026)
 - ✅ **Terminology Update**: Changed "Total Purchases" to "Total Orders" across entire application
@@ -871,11 +886,6 @@ The application is fully deployed and production-ready:
 - Node.js 18+ 
 - PostgreSQL 14+
 - npm or yarn
-
-**Production:**
-- Vercel (or similar Node.js hosting)
-- PostgreSQL (Supabase, Neon, etc.)
-- Optional: Cloudflare R2 for file storage
 
 **Browser Support:**
 - Chrome 90+
