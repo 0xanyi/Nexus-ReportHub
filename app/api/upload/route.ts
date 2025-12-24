@@ -516,12 +516,13 @@ export async function POST(request: Request) {
             }
 
             const product = productCache.get(productName)!
-            const total = DEFAULT_ORDER_UNIT_PRICE.mul(quantity)
+            const unitPrice = product.unitPrice
+            const total = unitPrice.mul(quantity)
 
             lineItems.push({
               productTypeId: product.id,
               quantity,
-              unitPrice: DEFAULT_ORDER_UNIT_PRICE,
+              unitPrice,
               totalAmount: total,
             })
           }
