@@ -138,10 +138,19 @@ export default async function DashboardPage({
     prisma.campaignCategory.findMany({
       include: {
         payments: {
+          where: {
+            paymentDate: { gte: fyStartDate, lte: fyEndDate }
+          },
           select: { amount: true }
         },
         _count: {
-          select: { payments: true }
+          select: {
+            payments: {
+              where: {
+                paymentDate: { gte: fyStartDate, lte: fyEndDate }
+              }
+            }
+          }
         }
       },
       orderBy: { createdAt: 'desc' },

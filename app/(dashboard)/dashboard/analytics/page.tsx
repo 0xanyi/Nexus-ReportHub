@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 import { AnalyticsCharts } from "@/components/analytics/AnalyticsCharts"
 import { TrendAnalysis } from "@/components/analytics/TrendAnalysis"
-// import { AnalyticsControls } from "@/components/analytics/AnalyticsControls"
-import { type ComparisonMode } from "@/components/ui/date-range-selector"
+import { resolveFYFromSearchParams, getFinancialYearBounds } from "@/lib/financialYear"
+import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
+import { Suspense } from "react"
 
 export default async function AnalyticsPage({
   searchParams,
@@ -19,14 +20,22 @@ export default async function AnalyticsPage({
     redirect("/login")
   }
 
-  // Parse comparison mode and date range from search params
   const resolvedSearchParams = await searchParams
-  const comparisonMode = (resolvedSearchParams.mode as ComparisonMode) || "year-over-year"
-  const fromDate = resolvedSearchParams.from as string
-  const toDate = resolvedSearchParams.to as string
+  const fyParam = resolvedSearchParams.fy as string | undefined
+  const { startDate: fyStartDate, endDate: fyEndDate, label: fyLabel } =
+    await resolveFYFromSearchParams(fyParam, prisma)
 
-  // Get all transactions with related data
+  // Calculate previous FY for comparison
+  const prevFYBounds = getFinancialYearBounds(new Date(fyStartDate.getTime() - 1))
+
+  // Get transactions filtered by current FY
   const transactions = await prisma.transaction.findMany({
+    where: {
+      transactionDate: {
+        gte: fyStartDate,
+        lte: fyEndDate,
+      },
+    },
     include: {
       church: {
         include: {
@@ -44,8 +53,39 @@ export default async function AnalyticsPage({
     },
   })
 
-  // Get all payments
+  // Get transactions from previous FY for comparison
+  const prevFYTransactions = await prisma.transaction.findMany({
+    where: {
+      transactionDate: {
+        gte: prevFYBounds.startDate,
+        lte: prevFYBounds.endDate,
+      },
+    },
+    include: {
+      church: {
+        include: {
+          group: true,
+        },
+      },
+      lineItems: {
+        include: {
+          productType: true,
+        },
+      },
+    },
+    orderBy: {
+      transactionDate: "desc",
+    },
+  })
+
+  // Get payments filtered by current FY
   const payments = await prisma.payment.findMany({
+    where: {
+      paymentDate: {
+        gte: fyStartDate,
+        lte: fyEndDate,
+      },
+    },
     include: {
       church: {
         include: {
@@ -58,95 +98,31 @@ export default async function AnalyticsPage({
     },
   })
 
-  // Calculate comparison data based on selected mode
-  const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth()
+  // Get payments from previous FY for comparison
+  const prevFYPayments = await prisma.payment.findMany({
+    where: {
+      paymentDate: {
+        gte: prevFYBounds.startDate,
+        lte: prevFYBounds.endDate,
+      },
+    },
+    include: {
+      church: {
+        include: {
+          group: true,
+        },
+      },
+    },
+    orderBy: {
+      paymentDate: "desc",
+    },
+  })
 
-  function getComparisonData(mode: ComparisonMode, from?: string, to?: string) {
-    switch (mode) {
-      case "year-over-year":
-        const lastYear = currentYear - 1
-        return {
-          currentPeriod: { year: currentYear, label: currentYear.toString() },
-          comparePeriod: { year: lastYear, label: lastYear.toString() },
-          currentTransactions: transactions.filter(
-            (t) => new Date(t.transactionDate).getFullYear() === currentYear
-          ),
-          compareTransactions: transactions.filter(
-            (t) => new Date(t.transactionDate).getFullYear() === lastYear
-          ),
-          currentPayments: payments.filter(
-            (p) => new Date(p.paymentDate).getFullYear() === currentYear
-          ),
-          comparePayments: payments.filter(
-            (p) => new Date(p.paymentDate).getFullYear() === lastYear
-          ),
-        }
-
-      case "month-to-month":
-        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1
-        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear
-
-        return {
-          currentPeriod: { month: currentMonth, year: currentYear, label: new Date(currentYear, currentMonth).toLocaleString("default", { month: "long", year: "numeric" }) },
-          comparePeriod: { month: lastMonth, year: lastMonthYear, label: new Date(lastMonthYear, lastMonth).toLocaleString("default", { month: "long", year: "numeric" }) },
-          currentTransactions: transactions.filter(
-            (t) => new Date(t.transactionDate).getMonth() === currentMonth &&
-                   new Date(t.transactionDate).getFullYear() === currentYear
-          ),
-          compareTransactions: transactions.filter(
-            (t) => new Date(t.transactionDate).getMonth() === lastMonth &&
-                   new Date(t.transactionDate).getFullYear() === lastMonthYear
-          ),
-          currentPayments: payments.filter(
-            (p) => new Date(p.paymentDate).getMonth() === currentMonth &&
-                   new Date(p.paymentDate).getFullYear() === currentYear
-          ),
-          comparePayments: payments.filter(
-            (p) => new Date(p.paymentDate).getMonth() === lastMonth &&
-                   new Date(p.paymentDate).getFullYear() === lastMonthYear
-          ),
-        }
-
-      case "custom":
-        if (!from || !to) {
-          // Fallback to year-over-year if no dates provided
-          return getComparisonData("year-over-year")
-        }
-
-        const fromDateObj = new Date(from)
-        const toDateObj = new Date(to)
-
-        return {
-          currentPeriod: { from: from, to: to, label: `${from} to ${to}` },
-          comparePeriod: { from: from, to: to, label: `${from} to ${to}` },
-          currentTransactions: transactions.filter((t) => {
-            const tDate = new Date(t.transactionDate)
-            return tDate >= fromDateObj && tDate <= toDateObj
-          }),
-          compareTransactions: [], // No comparison for custom ranges
-          currentPayments: payments.filter((p) => {
-            const pDate = new Date(p.paymentDate)
-            return pDate >= fromDateObj && pDate <= toDateObj
-          }),
-          comparePayments: [], // No comparison for custom ranges
-        }
-
-      default:
-        return getComparisonData("year-over-year")
-    }
-  }
-
-  const comparisonData = getComparisonData(comparisonMode, fromDate, toDate)
-
-  const {
-    currentTransactions,
-    compareTransactions,
-    currentPayments,
-    comparePayments,
-    currentPeriod,
-    comparePeriod,
-  } = comparisonData
+  // Use FY-filtered data directly
+  const currentTransactions = transactions
+  const compareTransactions = prevFYTransactions
+  const currentPayments = payments
+  const comparePayments = prevFYPayments
 
   // Calculate totals
   const currentYearOrders = currentTransactions.reduce((sum, t) => {
@@ -180,15 +156,20 @@ export default async function AnalyticsPage({
       : 0
 
   // Group data by month for current and comparison periods
-  const monthlyData = Array.from({ length: 12 }, (_, i) => {
-    const month = new Date(currentYear, i, 1).toLocaleString("default", { month: "short" })
+  // FY months: Dec (11), Jan (0), Feb (1), ..., Nov (10)
+  const fyMonthOrder = [11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  const fyYear = fyEndDate.getFullYear()
+
+  const monthlyData = fyMonthOrder.map((monthIndex, i) => {
+    const displayYear = monthIndex === 11 ? fyYear - 1 : fyYear
+    const month = new Date(displayYear, monthIndex, 1).toLocaleString("default", { month: "short" })
 
     // Current period
     const currentMonthTransactions = currentTransactions.filter(
-      (t) => new Date(t.transactionDate).getMonth() === i
+      (t) => new Date(t.transactionDate).getMonth() === monthIndex
     )
     const currentMonthPayments = currentPayments.filter(
-      (p) => new Date(p.paymentDate).getMonth() === i
+      (p) => new Date(p.paymentDate).getMonth() === monthIndex
     )
 
     const currentOrders = currentMonthTransactions.reduce((sum, t) => {
@@ -202,10 +183,10 @@ export default async function AnalyticsPage({
 
     // Comparison period
     const lastMonthTransactions = compareTransactions.filter(
-      (t) => new Date(t.transactionDate).getMonth() === i
+      (t) => new Date(t.transactionDate).getMonth() === monthIndex
     )
     const lastMonthPayments = comparePayments.filter(
-      (p) => new Date(p.paymentDate).getMonth() === i
+      (p) => new Date(p.paymentDate).getMonth() === monthIndex
     )
 
     const lastOrders = lastMonthTransactions.reduce((sum, t) => {
@@ -224,16 +205,23 @@ export default async function AnalyticsPage({
     }
   })
 
-  // Top performing churches by payment collection rate
+  // Top performing churches by payment collection rate (filtered by FY)
   const churches = await prisma.church.findMany({
     include: {
       group: true,
       transactions: {
+        where: {
+          transactionDate: { gte: fyStartDate, lte: fyEndDate },
+        },
         include: {
           lineItems: true,
         },
       },
-      payments: true,
+      payments: {
+        where: {
+          paymentDate: { gte: fyStartDate, lte: fyEndDate },
+        },
+      },
     },
   })
 
@@ -259,17 +247,24 @@ export default async function AnalyticsPage({
     .filter((c) => c.totalOrders > 0)
     .sort((a, b) => b.collectionRate - a.collectionRate)
 
-  // Group performance
+  // Group performance (filtered by FY)
   const groupPerformance = await prisma.group.findMany({
     include: {
       churches: {
         include: {
           transactions: {
+            where: {
+              transactionDate: { gte: fyStartDate, lte: fyEndDate },
+            },
             include: {
               lineItems: true,
             },
           },
-          payments: true,
+          payments: {
+            where: {
+              paymentDate: { gte: fyStartDate, lte: fyEndDate },
+            },
+          },
         },
       },
     },
@@ -300,22 +295,25 @@ export default async function AnalyticsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Advanced Analytics</h2>
-        <p className="text-muted-foreground">
-          In-depth analysis of orders, payments, and collection trends
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Advanced Analytics</h2>
+          <p className="text-muted-foreground">
+            In-depth analysis of orders, payments, and collection trends.{" "}
+            Viewing <span className="font-semibold">{fyLabel}</span>.
+          </p>
+        </div>
+        <Suspense fallback={<div className="h-10 w-32 animate-pulse rounded-md bg-slate-100" />}>
+          <FinancialYearSelector />
+        </Suspense>
       </div>
 
-      {/* Controls for date range selection */}
-      {/* <AnalyticsControls /> */}
-
-      {/* Year-over-Year Summary */}
+      {/* FY Comparison Summary */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              {typeof currentPeriod.label === 'string' ? currentPeriod.label : `${currentPeriod.from} to ${currentPeriod.to}`} Orders
+              {fyLabel} Orders
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -329,7 +327,7 @@ export default async function AnalyticsPage({
                 }`}
               >
                 {orderGrowth >= 0 ? "+" : ""}
-                {orderGrowth.toFixed(1)}% vs {comparePeriod.label}
+                {orderGrowth.toFixed(1)}% vs {prevFYBounds.label}
               </p>
             )}
           </CardContent>
@@ -338,7 +336,7 @@ export default async function AnalyticsPage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              {typeof currentPeriod.label === 'string' ? currentPeriod.label : `${currentPeriod.from} to ${currentPeriod.to}`} Payments
+              {fyLabel} Payments
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -350,7 +348,7 @@ export default async function AnalyticsPage({
                 className={`text-xs ${paymentGrowth >= 0 ? "text-green-600" : "text-destructive"}`}
               >
                 {paymentGrowth >= 0 ? "+" : ""}
-                {paymentGrowth.toFixed(1)}% vs {comparePeriod.label}
+                {paymentGrowth.toFixed(1)}% vs {prevFYBounds.label}
               </p>
             )}
           </CardContent>
@@ -369,7 +367,7 @@ export default async function AnalyticsPage({
                 }`}
               >
                 {currentCollectionRate >= lastCollectionRate ? "+" : ""}
-                {(currentCollectionRate - lastCollectionRate).toFixed(1)}% vs {comparePeriod.label}
+                {(currentCollectionRate - lastCollectionRate).toFixed(1)}% vs {prevFYBounds.label}
               </p>
             )}
           </CardContent>
@@ -383,7 +381,7 @@ export default async function AnalyticsPage({
             <div className="text-2xl font-bold text-destructive">
               {formatCurrency(currentYearOrders - currentYearPaymentsTotal, "GBP")}
             </div>
-            <p className="text-xs text-muted-foreground">Current year balance</p>
+            <p className="text-xs text-muted-foreground">{fyLabel} balance</p>
           </CardContent>
         </Card>
       </div>
@@ -394,8 +392,8 @@ export default async function AnalyticsPage({
       {/* Trend Analysis */}
       <TrendAnalysis
         churchPerformance={churchPerformance}
-        currentYear={currentYear}
-        lastYear={comparePeriod.year || currentYear - 1}
+        currentYear={fyYear}
+        lastYear={prevFYBounds.endDate.getFullYear()}
       />
     </div>
   )
