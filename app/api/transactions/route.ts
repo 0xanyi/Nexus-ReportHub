@@ -1,20 +1,25 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 
 // POST /api/transactions - Create a new order/transaction
 export async function POST(request: Request) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // CSRF validation for mutating request
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
+
+    // Auth and role check
+    const authCheck = requireAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
-    // Only admins can create manual orders
-    if (session.user.role !== "SUPER_ADMIN" && session.user.role !== "ZONE_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
+    const user = session!.user
 
     const body = await request.json()
     const { churchId, transactionDate, notes, lineItems } = body
@@ -52,9 +57,9 @@ export async function POST(request: Request) {
 
     // Get department
     let department
-    if (session.user.departmentId) {
+    if (user.departmentId) {
       department = await prisma.department.findUnique({
-        where: { id: session.user.departmentId },
+        where: { id: user.departmentId },
       })
     } else {
       department = await prisma.department.findFirst()
@@ -105,7 +110,7 @@ export async function POST(request: Request) {
       data: {
         churchId,
         departmentId: department.id,
-        uploadedBy: session.user.id,
+        uploadedBy: user.id,
         transactionDate: new Date(transactionDate),
         transactionType: "PURCHASE",
         currency: church.group.zone.currency || "GBP",

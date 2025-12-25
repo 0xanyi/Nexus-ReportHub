@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { requireAuth, requireAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 
 const createGroupSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -12,8 +14,9 @@ export async function GET() {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const authCheck = requireAuth(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const groups = await prisma.group.findMany({
@@ -41,13 +44,14 @@ export async function POST(request: Request) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    // Only admins can create groups
-    if (session.user.role !== "SUPER_ADMIN" && session.user.role !== "ZONE_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Auth and role check
+    const authCheck = requireAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const body = await request.json()

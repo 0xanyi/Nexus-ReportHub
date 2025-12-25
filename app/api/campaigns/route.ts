@@ -3,6 +3,8 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { getFinancialYearFromParam } from "@/lib/financialYear"
+import { requireAuth, requireAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 
 const createCampaignSchema = z.object({
   name: z.string().min(1, "Campaign name is required").max(255),
@@ -14,8 +16,9 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const authCheck = requireAuth(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const { searchParams } = new URL(request.url)
@@ -86,13 +89,14 @@ export async function POST(request: Request) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    const isAdmin = session.user.role === "SUPER_ADMIN" || session.user.role === "ZONE_ADMIN"
-    if (!isAdmin) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Auth and role check
+    const authCheck = requireAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const body = await request.json()

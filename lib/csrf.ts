@@ -1,4 +1,5 @@
 import { headers } from "next/headers"
+import { NextResponse } from "next/server"
 
 export async function validateCsrfToken(): Promise<boolean> {
   const headersList = await headers()
@@ -45,4 +46,16 @@ export async function validateCsrfToken(): Promise<boolean> {
   }
   
   return true
+}
+
+/**
+ * Validate CSRF and return error response if invalid
+ * Use at the start of mutating API routes (POST, PUT, PATCH, DELETE)
+ */
+export async function requireCsrf(): Promise<NextResponse | null> {
+  const isValid = await validateCsrfToken()
+  if (!isValid) {
+    return NextResponse.json({ error: "CSRF validation failed" }, { status: 403 })
+  }
+  return null
 }

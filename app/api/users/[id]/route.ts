@@ -3,6 +3,8 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
+import { requireAuth, requireSuperAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 
 const updateUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
@@ -22,12 +24,16 @@ export async function GET(
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const authCheck = requireAuth(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
+    // After auth check, session is guaranteed to be non-null
+    const user_ = session!.user
+
     // Only super admins or the user themselves can view user details
-    if (session.user.role !== "SUPER_ADMIN" && session.user.id !== id) {
+    if (user_.role !== "SUPER_ADMIN" && user_.id !== id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -85,13 +91,14 @@ export async function PUT(
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    // Only super admins can update users
-    if (session.user.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Auth and role check
+    const authCheck = requireSuperAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const body = await request.json()
@@ -160,17 +167,18 @@ export async function DELETE(
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    // Only super admins can delete users
-    if (session.user.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Auth and role check
+    const authCheck = requireSuperAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     // Prevent deleting yourself
-    if (session.user.id === id) {
+    if (session!.user.id === id) {
       return NextResponse.json(
         { error: "Cannot delete your own account" },
         { status: 400 }

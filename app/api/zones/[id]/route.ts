@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { requireAuth, requireSuperAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 
 const updateZoneSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
@@ -15,8 +17,9 @@ export async function GET(
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const authCheck = requireAuth(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const params = await context.params
@@ -49,15 +52,14 @@ export async function PUT(
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    if (session.user.role !== "SUPER_ADMIN") {
-      return NextResponse.json(
-        { error: "Forbidden - Super Admin access required" },
-        { status: 403 }
-      )
+    // Auth and role check
+    const authCheck = requireSuperAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const params = await context.params
@@ -133,15 +135,14 @@ export async function DELETE(
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    if (session.user.role !== "SUPER_ADMIN") {
-      return NextResponse.json(
-        { error: "Forbidden - Super Admin access required" },
-        { status: 403 }
-      )
+    // Auth and role check
+    const authCheck = requireSuperAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const params = await context.params

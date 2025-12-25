@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { requireAuth, requireAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 import { Prisma } from "@prisma/client"
 
 // GET /api/transactions/[id] - Get a specific transaction
@@ -11,8 +13,9 @@ export async function GET(
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const authCheck = requireAuth(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const { id } = await params
@@ -61,14 +64,16 @@ export async function PUT(
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
+
+    // Auth and role check
+    const authCheck = requireAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
-    // Only admins can edit orders
-    if (session.user.role !== "SUPER_ADMIN" && session.user.role !== "ZONE_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
 
     const { id } = await params
     const body = await request.json()
@@ -214,13 +219,14 @@ export async function DELETE(
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    // Only admins can delete orders
-    if (session.user.role !== "SUPER_ADMIN" && session.user.role !== "ZONE_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Auth and role check
+    const authCheck = requireAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const { id } = await params

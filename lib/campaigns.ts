@@ -1,7 +1,5 @@
 import { prisma } from "@/lib/prisma"
 
-type DateRange = { startDate?: Date; endDate?: Date }
-
 interface CampaignChurchSummary {
   id: string
   name: string

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { requireAuth, requireSuperAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 
 const createDepartmentSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
@@ -12,8 +14,9 @@ export async function GET() {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const authCheck = requireAuth(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const departments = await prisma.department.findMany({
@@ -48,13 +51,14 @@ export async function POST(request: Request) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    // Only admins can create departments
-    if (session.user.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Auth and role check
+    const authCheck = requireSuperAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const body = await request.json()

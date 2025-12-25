@@ -3,6 +3,8 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
+import { requireSuperAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 
 const createUserSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -19,13 +21,9 @@ export async function GET() {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Only super admins can view all users
-    if (session.user.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    const authCheck = requireSuperAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const users = await prisma.user.findMany({
@@ -76,13 +74,14 @@ export async function POST(request: Request) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    // Only super admins can create users
-    if (session.user.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Auth and role check
+    const authCheck = requireSuperAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const body = await request.json()

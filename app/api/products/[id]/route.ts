@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { requireAuth, requireAdmin } from "@/lib/auth-guards";
+import { requireCsrf } from "@/lib/csrf";
 
 const updateProductSchema = z.object({
   name: z.string().min(1, "Product name is required").optional(),
@@ -17,8 +19,10 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const authCheck = requireAuth(session);
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
 
     const { id } = await params;
@@ -61,18 +65,15 @@ export async function PUT(
 ) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
-    // Check if user has admin role
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email! },
-      select: { role: true },
-    });
+    // CSRF validation
+    const csrfError = await requireCsrf();
+    if (csrfError) return csrfError;
 
-    if (!user || !["SUPER_ADMIN", "ZONE_ADMIN"].includes(user.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Auth and role check
+    const authCheck = requireAdmin(session);
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
 
     const { id } = await params;
@@ -173,18 +174,15 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
-    // Check if user has admin role
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email! },
-      select: { role: true },
-    });
+    // CSRF validation
+    const csrfError = await requireCsrf();
+    if (csrfError) return csrfError;
 
-    if (!user || !["SUPER_ADMIN", "ZONE_ADMIN"].includes(user.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Auth and role check
+    const authCheck = requireAdmin(session);
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
 
     const { id } = await params;

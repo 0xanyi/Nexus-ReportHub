@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import Papa from "papaparse"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 
 type RawCsvRow = Record<string, string>
 
@@ -32,12 +34,14 @@ export async function POST(request: Request) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
 
-    if (session.user.role !== "SUPER_ADMIN" && session.user.role !== "ZONE_ADMIN") {
-      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 })
+    // Auth and role check
+    const authCheck = requireAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
     const formData = await request.formData()

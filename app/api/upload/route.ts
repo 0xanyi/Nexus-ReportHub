@@ -3,6 +3,8 @@ import { Prisma, UploadType, type PaymentMethod } from "@prisma/client"
 import Papa from "papaparse"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/auth-guards"
+import { requireCsrf } from "@/lib/csrf"
 
 type RawCsvRow = Record<string, string>
 
@@ -264,13 +266,18 @@ export async function POST(request: Request) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // CSRF validation
+    const csrfError = await requireCsrf()
+    if (csrfError) return csrfError
+
+    // Auth and role check
+    const authCheck = requireAdmin(session)
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
-    if (session.user.role !== "SUPER_ADMIN" && session.user.role !== "ZONE_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
+    // After auth check, session and user are guaranteed to exist
+    const user = session!.user
 
     const formData = await request.formData()
     const file = formData.get("file") as File | null
@@ -319,9 +326,9 @@ export async function POST(request: Request) {
 
     let department
     
-    if (session.user.departmentId) {
+    if (user.departmentId) {
       department = await prisma.department.findUnique({
-        where: { id: session.user.departmentId },
+        where: { id: user.departmentId },
       })
     } else {
       department = await prisma.department.findFirst()
@@ -336,7 +343,7 @@ export async function POST(request: Request) {
     const uploadHistory = await prisma.uploadHistory.create({
       data: {
         fileName: file.name,
-        uploadedBy: session.user.id,
+        uploadedBy: user.id,
         status: "PROCESSING",
         uploadType,
       },
@@ -433,7 +440,7 @@ export async function POST(request: Request) {
             data: {
               churchId: church.id,
               departmentId: department.id,
-              uploadedBy: session.user.id,
+              uploadedBy: user.id,
               paymentDate,
               amount: new Prisma.Decimal(amount.toFixed(2)),
               currency: DEFAULT_ORDER_CURRENCY,
@@ -540,7 +547,7 @@ export async function POST(request: Request) {
             data: {
               churchId: church.id,
               departmentId: department.id,
-              uploadedBy: session.user.id,
+              uploadedBy: user.id,
               transactionDate: orderPeriodDate,
               transactionType: "PURCHASE",
               currency: DEFAULT_ORDER_CURRENCY,
