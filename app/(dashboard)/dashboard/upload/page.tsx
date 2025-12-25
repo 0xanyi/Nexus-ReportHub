@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { SyncPricesSection } from "@/components/upload/SyncPricesSection"
 
 export default function UploadPage() {
   const router = useRouter()
@@ -370,6 +371,8 @@ export default function UploadPage() {
           </div>
         </CardContent>
       </Card>
+
+      <SyncPricesSection />
     </div>
   )
 }
