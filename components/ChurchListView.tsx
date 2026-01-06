@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/lib/utils"
+import { exportChurchListToCSV } from "@/lib/exports"
 
 interface Church {
   id: string
@@ -136,7 +137,6 @@ export function ChurchListView({ churches }: ChurchListViewProps) {
               ))}
             </select>
 
-            {/* View Mode Toggle */}
             <div className="flex border rounded-md">
               <button
                 onClick={() => setViewMode("grid")}
@@ -155,6 +155,25 @@ export function ChurchListView({ churches }: ChurchListViewProps) {
                 Table
               </button>
             </div>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                const exportData = filteredChurches.map((church) => ({
+                  id: church.id,
+                  name: church.name,
+                  group: church.group.name,
+                  zone: church.group.zone.name,
+                  totalOrders: church.totalOrders,
+                  totalPayments: church.totalPayments,
+                  totalCampaigns: church.totalCampaigns,
+                  balance: church.balance,
+                }))
+                exportChurchListToCSV(exportData)
+              }}
+            >
+              Export CSV
+            </Button>
           </div>
 
           <div className="mt-4 text-sm text-muted-foreground">

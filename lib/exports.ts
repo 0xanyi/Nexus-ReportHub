@@ -410,6 +410,64 @@ export function exportPaymentSummaryToPDF(data: PaymentSummaryData) {
   doc.save(`${filename}_${new Date().toISOString().split("T")[0]}.pdf`)
 }
 
+interface ChurchListExportData {
+  id: string
+  name: string
+  group: string
+  zone: string
+  totalOrders: number
+  totalPayments: number
+  totalCampaigns: number
+  balance: number
+}
+
+function escapeCSVField(field: string): string {
+  if (field.includes(",") || field.includes('"') || field.includes("\n")) {
+    return `"${field.replace(/"/g, '""')}"`
+  }
+  return field
+}
+
+export function exportChurchListToCSV(churches: ChurchListExportData[], filename?: string) {
+  const headers = [
+    "Church Name",
+    "Group",
+    "Zone",
+    "Total Orders",
+    "Total Payments",
+    "Total Campaigns",
+    "Balance",
+    "Balance Status",
+  ]
+
+  const rows = churches.map((church) => [
+    escapeCSVField(church.name),
+    escapeCSVField(church.group),
+    escapeCSVField(church.zone),
+    church.totalOrders.toFixed(2),
+    church.totalPayments.toFixed(2),
+    church.totalCampaigns.toFixed(2),
+    Math.abs(church.balance).toFixed(2),
+    church.balance < 0 ? "Owed" : "Credit",
+  ])
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) => row.join(",")),
+  ].join("\n")
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  const url = URL.createObjectURL(blob)
+  try {
+    const link = document.createElement("a")
+    link.href = url
+    link.download = filename || `Churches_Export_${new Date().toISOString().split("T")[0]}.csv`
+    link.click()
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
 export function exportPaymentSummaryToExcel(data: PaymentSummaryData) {
   const workbook = new ExcelJS.Workbook()
   const worksheet = workbook.addWorksheet("Payment Summary")
