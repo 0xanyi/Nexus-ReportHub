@@ -233,6 +233,7 @@ model TransactionLineItem {
 model Payment {
   id              String         @id @default(cuid())
   paymentDate     DateTime
+  attributedMonth DateTime?      // Month the payment should be attributed to (for print payments made before order date)
   amount          Decimal        @db.Decimal(10, 2)
   currency        String         @default("GBP")
   paymentMethod   PaymentMethod

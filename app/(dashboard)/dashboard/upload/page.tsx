@@ -325,12 +325,13 @@ export default function UploadPage() {
             <div>
               <h4 className="text-sm font-semibold text-gray-900">Bank Transaction Upload</h4>
               <div className="mt-2 space-y-2 rounded-md bg-gray-50 p-4 font-mono text-sm">
-                <div>Date, Amount, Chapter, Group, Type, Payment Method (optional), Reference (optional)</div>
+                <div>Date, Amount, Chapter, Payment Type, Payment Method (optional), Reference (optional), Attributed Month (optional)</div>
               </div>
               <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
                 <li>Amounts are assumed to be GBP and will be stored as sponsorship giving unless the type contains &ldquo;print&rdquo;.</li>
                 <li>Types appearing more than twice will automatically create a campaign category.</li>
                 <li>Dates can be Excel serial values or DD/MM/YYYY formats.</li>
+                <li>Attributed Month (MM-YYYY) maps payments to the correct period when payment occurs before the order date.</li>
               </ul>
               <div className="mt-3">
                 <Link href="/api/template/download?type=transaction">

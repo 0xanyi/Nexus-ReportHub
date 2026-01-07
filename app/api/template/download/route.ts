@@ -23,11 +23,11 @@ LW Leeds,Yorkshire Group
 LW Cardiff,Wales Group`
     filename = "churches_template.csv"
   } else {
-    csvContent = `Date,Amount,Chapter,Group,Type,Payment Method,Reference
-15/01/2025,6250.00,LW BIRMINGHAM,Birmingham Group,Print Payment,BANK_TRANSFER,REF12345
-15/01/2025,500.00,LW GLASGOW,Glasgow Group,Sponsorship,CASH,
-16/01/2025,1200.00,LW EDINBURGH,Edinburgh Group,Missions Giving,BANK_TRANSFER,REF12346
-20/01/2025,300.00,LW MANCHESTER,Manchester Group,Missions Giving,ESPEES,`
+    csvContent = `Date,Amount,Chapter,Payment Type,Payment Method,Reference,Attributed Month
+15/01/2025,6250.00,LW BIRMINGHAM,Print Payment,BANK_TRANSFER,REF12345,01-2025
+15/01/2025,500.00,LW GLASGOW,Sponsorship,CASH,,
+16/01/2025,1200.00,LW EDINBURGH,Missions Giving,BANK_TRANSFER,REF12346,
+20/01/2025,300.00,LW MANCHESTER,Missions Giving,ESPEES,,02-2025`
     filename = "transaction_template.csv"
   }
 

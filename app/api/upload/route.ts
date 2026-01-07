@@ -12,10 +12,10 @@ interface TransactionRow {
   date: string
   amount: string
   church: string
-  group?: string
   type: string
   paymentMethod?: string
   reference?: string
+  attributedMonth?: string
 }
 
 interface OrderRow {
@@ -35,10 +35,10 @@ const TRANSACTION_HEADER_MAP = {
   date: ["DATE", "TRANSACTION DATE"],
   amount: ["AMOUNT", "VALUE"],
   church: ["CHURCH", "CHURCH NAME", "CHAPTER"],
-  group: ["GROUP"],
-  type: ["TYPE", "CATEGORY"],
+  type: ["TYPE", "CATEGORY", "PAYMENT TYPE"],
   paymentMethod: ["PAYMENT METHOD", "METHOD"],
   reference: ["REFERENCE", "REFERENCE NUMBER"],
+  attributedMonth: ["ATTRIBUTED MONTH", "ATTRIBUTED TO", "FOR MONTH"],
 }
 
 const ORDER_METADATA_COLUMNS = new Set([
@@ -104,6 +104,11 @@ function parseOrderPeriod(value: string | null): Date | null {
   const trimmed = cleanString(value)
   if (!trimmed) return null
 
+  if (/^\d{2}-\d{4}$/.test(trimmed)) {
+    const [month, year] = trimmed.split("-").map((part) => parseInt(part, 10))
+    return new Date(Date.UTC(year, month - 1, 1))
+  }
+
   if (/^\d{4}-\d{2}$/.test(trimmed)) {
     const [year, month] = trimmed.split("-").map((part) => parseInt(part, 10))
     return new Date(Date.UTC(year, month - 1, 1))
@@ -129,10 +134,10 @@ function resolveTransactionRow(row: RawCsvRow): TransactionRow | null {
   const date = resolveHeader(row, TRANSACTION_HEADER_MAP.date)
   const amount = resolveHeader(row, TRANSACTION_HEADER_MAP.amount)
   const church = resolveHeader(row, TRANSACTION_HEADER_MAP.church)
-  const group = resolveHeader(row, TRANSACTION_HEADER_MAP.group)
   const type = resolveHeader(row, TRANSACTION_HEADER_MAP.type)
   const paymentMethod = resolveHeader(row, TRANSACTION_HEADER_MAP.paymentMethod)
   const reference = resolveHeader(row, TRANSACTION_HEADER_MAP.reference)
+  const attributedMonth = resolveHeader(row, TRANSACTION_HEADER_MAP.attributedMonth)
 
   if (!date && !amount && !church && !type) {
     return null
@@ -142,10 +147,10 @@ function resolveTransactionRow(row: RawCsvRow): TransactionRow | null {
     date,
     amount,
     church,
-    group,
     type,
     paymentMethod,
     reference,
+    attributedMonth,
   }
 }
 
@@ -436,12 +441,17 @@ export async function POST(request: Request) {
           )
           const paymentMethod: PaymentMethod = paymentMethodCandidate ?? "BANK_TRANSFER"
 
+          const attributedMonthDate = row.attributedMonth
+            ? parseOrderPeriod(row.attributedMonth)
+            : null
+
           await prisma.payment.create({
             data: {
               churchId: church.id,
               departmentId: department.id,
               uploadedBy: user.id,
               paymentDate,
+              attributedMonth: attributedMonthDate,
               amount: new Prisma.Decimal(amount.toFixed(2)),
               currency: DEFAULT_ORDER_CURRENCY,
               paymentMethod,
@@ -449,7 +459,6 @@ export async function POST(request: Request) {
               referenceNumber: cleanString(row.reference) || null,
               campaignCategoryId: category?.id,
               campaignLabel: row.type,
-              notes: row.group ? `Group: ${row.group}` : undefined,
             },
           })
 
