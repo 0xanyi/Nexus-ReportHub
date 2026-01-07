@@ -2,7 +2,7 @@ import { auth } from "@/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency } from "@/lib/utils"
-import { resolveFYFromSearchParams } from "@/lib/financialYear"
+import { resolveFYFromSearchParams, buildPaymentDateFilter } from "@/lib/financialYear"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -119,9 +119,7 @@ export default async function DashboardPage({
           }
         },
         payments: {
-          where: {
-            paymentDate: { gte: fyStartDate, lte: fyEndDate }
-          },
+          where: buildPaymentDateFilter(fyStartDate, fyEndDate),
           select: {
             amount: true,
             paymentDate: true,
@@ -136,17 +134,13 @@ export default async function DashboardPage({
     prisma.campaignCategory.findMany({
       include: {
         payments: {
-          where: {
-            paymentDate: { gte: fyStartDate, lte: fyEndDate }
-          },
+          where: buildPaymentDateFilter(fyStartDate, fyEndDate),
           select: { amount: true }
         },
         _count: {
           select: {
             payments: {
-              where: {
-                paymentDate: { gte: fyStartDate, lte: fyEndDate }
-              }
+              where: buildPaymentDateFilter(fyStartDate, fyEndDate)
             }
           }
         }
@@ -182,9 +176,7 @@ export default async function DashboardPage({
       }
     }),
     prisma.payment.findMany({
-      where: {
-        paymentDate: { gte: fyStartDate, lte: fyEndDate }
-      },
+      where: buildPaymentDateFilter(fyStartDate, fyEndDate),
       orderBy: { paymentDate: "desc" },
       take: 5,
       select: {

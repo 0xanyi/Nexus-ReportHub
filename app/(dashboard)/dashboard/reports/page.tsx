@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
-import { resolveFYFromSearchParams } from "@/lib/financialYear"
+import { resolveFYFromSearchParams, buildPaymentDateFilter } from "@/lib/financialYear"
 import Link from "next/link"
 import { CampaignGivingOverview } from "@/components/analytics/CampaignGivingOverview"
 import { PaymentSummaryGenerator } from "@/components/reports/PaymentSummaryGenerator"
@@ -77,12 +77,7 @@ export default async function ReportsPage({
         },
       },
       payments: {
-        where: {
-          paymentDate: {
-            gte: fyStartDate,
-            lte: fyEndDate,
-          },
-        },
+        where: buildPaymentDateFilter(fyStartDate, fyEndDate),
       },
     },
     orderBy: {

@@ -8,7 +8,7 @@ import { ExportButtons } from "@/components/ExportButtons"
 import { PaymentHistory } from "@/components/PaymentHistory"
 import { CampaignBreakdown } from "@/components/churches/CampaignBreakdown"
 import { ChurchOrdersManager } from "@/components/churches/ChurchOrdersManager"
-import { resolveFYFromSearchParams } from "@/lib/financialYear"
+import { resolveFYFromSearchParams, buildPaymentDateFilter } from "@/lib/financialYear"
 import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
 import { Suspense } from "react"
 
@@ -66,10 +66,21 @@ export default async function ChurchDetailPage({
       },
       payments: {
         where: {
-          paymentDate: {
-            gte: fyStartDate,
-            lte: fyEndDate,
-          },
+          OR: [
+            {
+              attributedMonth: {
+                gte: fyStartDate,
+                lte: fyEndDate,
+              },
+            },
+            {
+              attributedMonth: null,
+              paymentDate: {
+                gte: fyStartDate,
+                lte: fyEndDate,
+              },
+            },
+          ],
         },
         include: {
           uploader: {

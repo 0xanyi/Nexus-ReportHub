@@ -167,6 +167,41 @@ function isPrintType(type: string): boolean {
   return normalizeCategoryName(type).includes(PRINT_KEYWORD)
 }
 
+/**
+ * Get the attributed month for a payment based on the church's most recent order.
+ * Uses the order's transactionDate as the attributed month to align payments
+ * with the financial year of the associated order.
+ * 
+ * Priority:
+ * 1. Use order's transactionDate (most recent order for the church)
+ * 2. Fall back to null if no orders exist
+ */
+async function getAttributedMonthFromOrders(
+  churchId: string,
+  prismaInstance: typeof prisma
+): Promise<Date | null> {
+  const recentOrder = await prismaInstance.transaction.findFirst({
+    where: {
+      churchId,
+      transactionType: "PURCHASE",
+    },
+    orderBy: {
+      transactionDate: "desc",
+    },
+    select: {
+      transactionDate: true,
+    },
+  })
+
+  if (recentOrder) {
+    // Return the first day of the order's month
+    const date = new Date(recentOrder.transactionDate)
+    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1))
+  }
+
+  return null
+}
+
 function resolveTransactionRow(row: RawCsvRow): TransactionRow | null {
   const date = resolveHeader(row, TRANSACTION_HEADER_MAP.date)
   const amount = resolveHeader(row, TRANSACTION_HEADER_MAP.amount)
@@ -480,7 +515,7 @@ export async function POST(request: Request) {
 
           const attributedMonthDate = row.attributedMonth
             ? parseOrderPeriod(row.attributedMonth)
-            : null
+            : await getAttributedMonthFromOrders(church.id, prisma)
 
           await prisma.payment.create({
             data: {

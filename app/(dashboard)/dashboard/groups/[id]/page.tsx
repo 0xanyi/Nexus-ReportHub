@@ -7,7 +7,7 @@ import Link from "next/link"
 import { TransactionHistory } from "@/components/TransactionHistory"
 import { PaymentHistory } from "@/components/PaymentHistory"
 import { CampaignBreakdown } from "@/components/churches/CampaignBreakdown"
-import { resolveFYFromSearchParams } from "@/lib/financialYear"
+import { resolveFYFromSearchParams, buildPaymentDateFilter } from "@/lib/financialYear"
 import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
 import { Suspense } from "react"
 
@@ -62,12 +62,7 @@ export default async function GroupDetailPage({
             },
           },
           payments: {
-            where: {
-              paymentDate: {
-                gte: fyStartDate,
-                lte: fyEndDate,
-              },
-            },
+            where: buildPaymentDateFilter(fyStartDate, fyEndDate),
             include: {
               uploader: {
                 select: {

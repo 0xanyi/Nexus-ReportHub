@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 import { AnalyticsCharts } from "@/components/analytics/AnalyticsCharts"
 import { TrendAnalysis } from "@/components/analytics/TrendAnalysis"
-import { resolveFYFromSearchParams, getFinancialYearBounds } from "@/lib/financialYear"
+import { resolveFYFromSearchParams, getFinancialYearBounds, buildPaymentDateFilter } from "@/lib/financialYear"
 import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
 import { Suspense } from "react"
 
@@ -80,12 +80,7 @@ export default async function AnalyticsPage({
 
   // Get payments filtered by current FY
   const payments = await prisma.payment.findMany({
-    where: {
-      paymentDate: {
-        gte: fyStartDate,
-        lte: fyEndDate,
-      },
-    },
+    where: buildPaymentDateFilter(fyStartDate, fyEndDate),
     include: {
       church: {
         include: {
@@ -100,12 +95,7 @@ export default async function AnalyticsPage({
 
   // Get payments from previous FY for comparison
   const prevFYPayments = await prisma.payment.findMany({
-    where: {
-      paymentDate: {
-        gte: prevFYBounds.startDate,
-        lte: prevFYBounds.endDate,
-      },
-    },
+    where: buildPaymentDateFilter(prevFYBounds.startDate, prevFYBounds.endDate),
     include: {
       church: {
         include: {
@@ -218,9 +208,7 @@ export default async function AnalyticsPage({
         },
       },
       payments: {
-        where: {
-          paymentDate: { gte: fyStartDate, lte: fyEndDate },
-        },
+        where: buildPaymentDateFilter(fyStartDate, fyEndDate),
       },
     },
   })
@@ -261,9 +249,7 @@ export default async function AnalyticsPage({
             },
           },
           payments: {
-            where: {
-              paymentDate: { gte: fyStartDate, lte: fyEndDate },
-            },
+            where: buildPaymentDateFilter(fyStartDate, fyEndDate),
           },
         },
       },

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
-import { resolveFYFromSearchParams } from "@/lib/financialYear"
+import { resolveFYFromSearchParams, buildPaymentDateFilter } from "@/lib/financialYear"
 import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
 import { Suspense } from "react"
 
@@ -24,7 +24,7 @@ interface Campaign {
 
 async function getCampaigns(startDate?: Date, endDate?: Date): Promise<Campaign[]> {
   const dateFilter = startDate && endDate
-    ? { paymentDate: { gte: startDate, lte: endDate } }
+    ? buildPaymentDateFilter(startDate, endDate)
     : {}
 
   const campaigns = await prisma.campaignCategory.findMany({

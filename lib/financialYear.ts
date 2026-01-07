@@ -114,11 +114,30 @@ export async function resolveFYFromSearchParams(
     return fyBounds
   }
   
-  // Fallback to calculated FY bounds (Dec 1 - Nov 30), not calendar year
   const calculatedBounds = getFinancialYearBounds(new Date())
   return {
     startDate: calculatedBounds.startDate,
     endDate: calculatedBounds.endDate,
     label: calculatedBounds.label,
+  }
+}
+
+export function buildPaymentDateFilter(fyStartDate: Date, fyEndDate: Date) {
+  return {
+    OR: [
+      {
+        attributedMonth: {
+          gte: fyStartDate,
+          lte: fyEndDate,
+        },
+      },
+      {
+        attributedMonth: null,
+        paymentDate: {
+          gte: fyStartDate,
+          lte: fyEndDate,
+        },
+      },
+    ],
   }
 }

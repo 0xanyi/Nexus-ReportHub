@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ChurchListView } from "@/components/ChurchListView"
 import { ChurchBulkUpload } from "@/components/churches/BulkUpload"
-import { resolveFYFromSearchParams } from "@/lib/financialYear"
+import { resolveFYFromSearchParams, buildPaymentDateFilter } from "@/lib/financialYear"
 import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
 import { Suspense } from "react"
 
@@ -47,17 +47,12 @@ export default async function ChurchesPage({
         },
       },
       payments: {
-        where: {
-          paymentDate: {
-            gte: fyStartDate,
-            lte: fyEndDate,
-          },
-        },
+        where: buildPaymentDateFilter(fyStartDate, fyEndDate),
       },
       _count: {
         select: {
           transactions: { where: { transactionDate: { gte: fyStartDate, lte: fyEndDate } } },
-          payments: { where: { paymentDate: { gte: fyStartDate, lte: fyEndDate } } },
+          payments: { where: buildPaymentDateFilter(fyStartDate, fyEndDate) },
         },
       },
     },
