@@ -36,6 +36,7 @@ enum UploadStatus {
   PARTIAL
   FAILED
   PROCESSING
+  ROLLED_BACK
 }
 
 enum UploadType {
@@ -205,6 +206,9 @@ model Transaction {
   uploadedBy String
   uploader   User   @relation(fields: [uploadedBy], references: [id])
 
+  uploadHistoryId String?
+  uploadHistory   UploadHistory? @relation(fields: [uploadHistoryId], references: [id], onDelete: SetNull)
+
   lineItems TransactionLineItem[]
 
   @@index([churchId])
@@ -212,6 +216,7 @@ model Transaction {
   @@index([transactionDate])
   @@index([transactionType, transactionDate])
   @@index([uploadedBy])
+  @@index([uploadHistoryId])
 }
 
 model TransactionLineItem {
@@ -233,7 +238,7 @@ model TransactionLineItem {
 model Payment {
   id              String         @id @default(cuid())
   paymentDate     DateTime
-  attributedMonth DateTime?      // Month the payment should be attributed to (for print payments made before order date)
+  attributedMonth DateTime?
   amount          Decimal        @db.Decimal(10, 2)
   currency        String         @default("GBP")
   paymentMethod   PaymentMethod
@@ -256,6 +261,9 @@ model Payment {
   campaignCategoryId String?
   campaignCategory   CampaignCategory? @relation(fields: [campaignCategoryId], references: [id])
 
+  uploadHistoryId String?
+  uploadHistory   UploadHistory? @relation(fields: [uploadHistoryId], references: [id], onDelete: SetNull)
+
   @@index([churchId])
   @@index([departmentId])
   @@index([paymentDate])
@@ -263,6 +271,7 @@ model Payment {
   @@index([paymentDate, churchId])
   @@index([forPurpose, paymentDate])
   @@index([campaignCategoryId])
+  @@index([uploadHistoryId])
 }
 
 model UploadHistory {
@@ -274,9 +283,13 @@ model UploadHistory {
   uploadType       UploadType   @default(TRANSACTION)
   errorLog         String?      @db.Text
   uploadedAt       DateTime     @default(now())
+  rolledBackAt     DateTime?
 
   uploadedBy String
   uploader   User   @relation(fields: [uploadedBy], references: [id])
+
+  transactions Transaction[]
+  payments     Payment[]
 
   @@index([uploadedBy])
   @@index([uploadedAt])

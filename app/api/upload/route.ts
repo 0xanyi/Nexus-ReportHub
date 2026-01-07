@@ -80,21 +80,26 @@ function parseUploadDate(value: string): Date | null {
     return parseExcelSerialDate(parseFloat(trimmed))
   }
 
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
-    const [day, month, year] = trimmed.split("/").map((part) => parseInt(part, 10))
-    const date = new Date(Date.UTC(year, month - 1, day))
-    if (!Number.isNaN(date.getTime())) return date
+  const ukDateMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (ukDateMatch) {
+    const day = parseInt(ukDateMatch[1], 10)
+    const month = parseInt(ukDateMatch[2], 10)
+    const year = parseInt(ukDateMatch[3], 10)
+    if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
+      const date = new Date(Date.UTC(year, month - 1, day))
+      if (!Number.isNaN(date.getTime())) return date
+    }
   }
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    const [year, month, day] = trimmed.split("-").map((part) => parseInt(part, 10))
-    const date = new Date(Date.UTC(year, month - 1, day))
-    if (!Number.isNaN(date.getTime())) return date
-  }
-
-  const parsed = new Date(trimmed)
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed
+  const isoDateMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
+  if (isoDateMatch) {
+    const year = parseInt(isoDateMatch[1], 10)
+    const month = parseInt(isoDateMatch[2], 10)
+    const day = parseInt(isoDateMatch[3], 10)
+    if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
+      const date = new Date(Date.UTC(year, month - 1, day))
+      if (!Number.isNaN(date.getTime())) return date
+    }
   }
 
   return null
@@ -114,9 +119,41 @@ function parseOrderPeriod(value: string | null): Date | null {
     return new Date(Date.UTC(year, month - 1, 1))
   }
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    const [year, month, day] = trimmed.split("-").map((part) => parseInt(part, 10))
-    return new Date(Date.UTC(year, month - 1, day))
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10)
+    const month = parseInt(isoMatch[2], 10)
+    return new Date(Date.UTC(year, month - 1, 1))
+  }
+
+  const ukDateMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (ukDateMatch) {
+    const month = parseInt(ukDateMatch[2], 10)
+    const year = parseInt(ukDateMatch[3], 10)
+    return new Date(Date.UTC(year, month - 1, 1))
+  }
+
+  const monthNames: Record<string, number> = {
+    jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+    jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
+  }
+  const shortMonthMatch = trimmed.match(/^([a-zA-Z]{3})-(\d{2,4})$/i)
+  if (shortMonthMatch) {
+    const monthStr = shortMonthMatch[1].toLowerCase()
+    let year = parseInt(shortMonthMatch[2], 10)
+    if (year < 100) year += 2000
+    const month = monthNames[monthStr]
+    if (month) {
+      return new Date(Date.UTC(year, month - 1, 1))
+    }
+  }
+
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    const serial = parseFloat(trimmed)
+    const parsed = parseExcelSerialDate(serial)
+    if (parsed) {
+      return new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), 1))
+    }
   }
 
   return null
@@ -450,6 +487,7 @@ export async function POST(request: Request) {
               churchId: church.id,
               departmentId: department.id,
               uploadedBy: user.id,
+              uploadHistoryId: uploadHistory.id,
               paymentDate,
               attributedMonth: attributedMonthDate,
               amount: new Prisma.Decimal(amount.toFixed(2)),
@@ -557,6 +595,7 @@ export async function POST(request: Request) {
               churchId: church.id,
               departmentId: department.id,
               uploadedBy: user.id,
+              uploadHistoryId: uploadHistory.id,
               transactionDate: orderPeriodDate,
               transactionType: "PURCHASE",
               currency: DEFAULT_ORDER_CURRENCY,

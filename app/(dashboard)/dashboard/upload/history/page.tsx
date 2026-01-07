@@ -7,6 +7,7 @@ import Link from "next/link"
 import { formatDate } from "@/lib/utils"
 import { resolveFYFromSearchParams } from "@/lib/financialYear"
 import { FinancialYearSelector } from "@/components/financial-year/FinancialYearSelector"
+import { RollbackButton } from "@/components/upload/RollbackButton"
 import { Suspense } from "react"
 
 export default async function UploadHistoryPage({
@@ -42,6 +43,12 @@ export default async function UploadHistoryPage({
         select: {
           name: true,
           email: true,
+        },
+      },
+      _count: {
+        select: {
+          transactions: true,
+          payments: true,
         },
       },
     },
@@ -89,15 +96,17 @@ export default async function UploadHistoryPage({
                       ? "bg-yellow-100 text-yellow-800"
                       : upload.status === "FAILED"
                       ? "bg-red-100 text-red-800"
+                      : upload.status === "ROLLED_BACK"
+                      ? "bg-purple-100 text-purple-800"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {upload.status}
+                  {upload.status === "ROLLED_BACK" ? "ROLLED BACK" : upload.status}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-8 text-sm">
+              <div className="flex flex-wrap items-center gap-4 md:gap-8 text-sm">
                 <div>
                   <span className="text-muted-foreground">Records Processed:</span>
                   <span className="ml-2 font-medium">{upload.recordsProcessed}</span>
@@ -112,7 +121,36 @@ export default async function UploadHistoryPage({
                     {new Date(upload.uploadedAt).toLocaleTimeString()}
                   </span>
                 </div>
+                {upload._count.transactions > 0 && (
+                  <div>
+                    <span className="text-muted-foreground">Orders:</span>
+                    <span className="ml-2 font-medium">{upload._count.transactions}</span>
+                  </div>
+                )}
+                {upload._count.payments > 0 && (
+                  <div>
+                    <span className="text-muted-foreground">Payments:</span>
+                    <span className="ml-2 font-medium">{upload._count.payments}</span>
+                  </div>
+                )}
+                <div className="ml-auto">
+                  <RollbackButton
+                    uploadId={upload.id}
+                    fileName={upload.fileName}
+                    recordsProcessed={upload._count.transactions + upload._count.payments}
+                    status={upload.status}
+                  />
+                </div>
               </div>
+
+              {upload.rolledBackAt && (
+                <div className="mt-4 p-3 bg-purple-50 rounded-md">
+                  <p className="text-sm text-purple-700">
+                    Rolled back on {formatDate(upload.rolledBackAt)} at{" "}
+                    {new Date(upload.rolledBackAt).toLocaleTimeString()}
+                  </p>
+                </div>
+              )}
 
               {upload.errorLog && (
                 <div className="mt-4 p-3 bg-yellow-50 rounded-md">
