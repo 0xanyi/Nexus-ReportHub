@@ -304,7 +304,7 @@ export default async function ChurchDetailPage({
             {Object.entries(productBreakdown).map(([productName, data]) => (
               <div
                 key={productName}
-                className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm"
+                className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-xs"
               >
                 <div className="text-sm font-medium text-slate-900">{productName}</div>
                 <div className="mt-2 flex items-end justify-between">

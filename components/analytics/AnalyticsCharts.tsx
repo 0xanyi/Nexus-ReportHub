@@ -21,6 +21,14 @@ import {
 } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+function formatCurrencyTooltip(value: unknown) {
+  return `£${Number(value ?? 0).toLocaleString()}`
+}
+
+function formatPercentTooltip(value: unknown) {
+  return `${Number(value ?? 0).toFixed(1)}%`
+}
+
 interface MonthlyData {
   month: string
   currentOrders: number
@@ -68,7 +76,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip formatter={(value: number) => `£${value.toLocaleString()}`} />
+              <Tooltip formatter={formatCurrencyTooltip} />
               <Legend />
               <Area
                 type="monotone"
@@ -103,7 +111,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis domain={[0, 100]} />
-              <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+              <Tooltip formatter={formatPercentTooltip} />
               <Line
                 type="monotone"
                 dataKey="collectionRate"
@@ -131,7 +139,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               <XAxis type="number" domain={[0, 100]} />
               <YAxis dataKey="name" type="category" width={100} />
               <Tooltip
-                formatter={(value: number) => `${value.toFixed(1)}%`}
+                formatter={formatPercentTooltip}
                 contentStyle={{ borderRadius: "8px" }}
               />
               <Bar dataKey="collectionRate" fill="#10b981" name="Remittance Rate %" radius={[0, 8, 8, 0]} />
@@ -152,7 +160,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip formatter={(value: number) => `£${value.toLocaleString()}`} />
+              <Tooltip formatter={formatCurrencyTooltip} />
               <Legend />
               <Line
                 type="monotone"
@@ -194,7 +202,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
                 fill="#8884d8"
                 fillOpacity={0.6}
               />
-              <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+              <Tooltip formatter={formatPercentTooltip} />
             </RadarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -212,7 +220,7 @@ export function AnalyticsCharts({ monthlyData, groupData }: AnalyticsChartsProps
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
               <YAxis />
-              <Tooltip formatter={(value: number) => `£${value.toLocaleString()}`} />
+              <Tooltip formatter={formatCurrencyTooltip} />
               <Legend />
               <Bar dataKey="totalOrders" fill="#8884d8" name="Orders" radius={[8, 8, 0, 0]} />
               <Bar dataKey="totalPayments" fill="#82ca9d" name="Payments" radius={[8, 8, 0, 0]} />

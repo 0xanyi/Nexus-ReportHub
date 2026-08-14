@@ -55,7 +55,7 @@ export function DateRangeSelector({
           id="comparison-mode"
           value={comparisonMode}
           onChange={(e) => onComparisonModeChange(e.target.value as ComparisonMode)}
-          className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           <option value="year-over-year">Year over Year</option>
           <option value="month-to-month">Month to Month</option>

@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDate } from "@/lib/utils"
-import { Decimal } from "@prisma/client/runtime/library"
 import { Edit, Trash2 } from "lucide-react"
 
 interface Transaction {
@@ -16,8 +15,8 @@ interface Transaction {
   lineItems: Array<{
     id: string
     quantity: number
-    unitPrice: number | string | Decimal
-    totalAmount: number | string | Decimal
+    unitPrice: number | string
+    totalAmount: number | string
     productType: {
       id: string
       name: string

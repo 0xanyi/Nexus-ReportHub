@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  agentRules: false,
+  serverExternalPackages: [
+    "@prisma/client",
+    "@prisma/adapter-pg",
+    "pg",
+  ],
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',

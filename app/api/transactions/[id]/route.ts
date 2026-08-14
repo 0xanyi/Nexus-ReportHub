@@ -3,7 +3,7 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { requireAuth, requireAdmin } from "@/lib/auth-guards"
 import { requireCsrf } from "@/lib/csrf"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@/generated/prisma/client"
 
 // GET /api/transactions/[id] - Get a specific transaction
 export async function GET(

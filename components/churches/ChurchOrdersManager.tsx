@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { TransactionHistory } from "@/components/TransactionHistory"
 import { OrderForm } from "@/components/churches/OrderForm"
 import { Plus } from "lucide-react"
-import { Decimal } from "@prisma/client/runtime/library"
 
 interface Transaction {
   id: string
@@ -17,12 +16,12 @@ interface Transaction {
   lineItems: Array<{
     id: string
     quantity: number
-    unitPrice: number | string | Decimal
-    totalAmount: number | string | Decimal
+    unitPrice: number | string
+    totalAmount: number | string
     productType: {
       id: string
       name: string
-      unitPrice?: number | string | Decimal
+      unitPrice?: number | string
     }
   }>
   uploader: {

@@ -87,7 +87,7 @@ export function CampaignGivingOverview({ categories }: CampaignGivingOverviewPro
       <CardContent className="space-y-6">
         {/* Summary Statistics */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+          <div className="rounded-xl border border-slate-200 bg-linear-to-br from-blue-50 to-indigo-50 p-4">
             <div className="text-xs font-medium uppercase tracking-wide text-slate-600">
               Total Raised
             </div>
@@ -131,7 +131,7 @@ export function CampaignGivingOverview({ categories }: CampaignGivingOverviewPro
               <div key={category.id} className="overflow-hidden rounded-xl border border-slate-200">
                 {/* Campaign Header */}
                 <div
-                  className="cursor-pointer bg-gradient-to-r from-slate-50 to-slate-100/50 p-4 transition hover:from-slate-100 hover:to-slate-50"
+                  className="cursor-pointer bg-linear-to-r from-slate-50 to-slate-100/50 p-4 transition hover:from-slate-100 hover:to-slate-50"
                   onClick={() => toggleCampaign(category.id)}
                 >
                   <div className="flex items-center justify-between">
@@ -168,7 +168,7 @@ export function CampaignGivingOverview({ categories }: CampaignGivingOverviewPro
                   {/* Progress Bar */}
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-600"
+                      className="h-full bg-linear-to-r from-blue-500 to-indigo-600"
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>

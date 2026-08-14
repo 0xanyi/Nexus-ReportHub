@@ -76,7 +76,7 @@ export function DashboardNavigation({
                     "group flex flex-col gap-0.5 rounded-xl px-3 py-2 transition-all",
                     "hover:bg-slate-800/60",
                     isActive
-                      ? "bg-blue-600/60 text-white shadow-inner outline outline-1 outline-blue-500/50"
+                      ? "bg-blue-600/60 text-white shadow-inner outline-solid outline-1 outline-blue-500/50"
                       : "text-slate-300 hover:text-slate-100"
                   )}
                 >
@@ -128,11 +128,11 @@ export function DashboardNavigation({
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col bg-slate-100/95 text-slate-900">
-        <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur">
+        <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-sm">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-10">
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-slate-600 shadow-sm transition hover:bg-slate-50 lg:hidden"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-slate-600 shadow-xs transition hover:bg-slate-50 lg:hidden"
               onClick={() => setMobileOpen(true)}
               aria-label="Open navigation"
             >
@@ -165,7 +165,7 @@ export function DashboardNavigation({
                 <form action={signOutAction} className="hidden sm:block">
                   <button
                     type="submit"
-                    className="rounded-xl border border-slate-200/80 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
+                    className="rounded-xl border border-slate-200/80 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-xs transition hover:bg-slate-50"
                   >
                     Sign out
                   </button>
@@ -183,7 +183,7 @@ export function DashboardNavigation({
       {mobileOpen && (
         <div className="lg:hidden">
           <div
-            className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs"
             onClick={() => setMobileOpen(false)}
           />
           <div className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-blue-900/60 bg-blue-950/95 px-4 py-6">

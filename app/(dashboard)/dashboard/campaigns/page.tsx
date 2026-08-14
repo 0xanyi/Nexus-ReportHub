@@ -125,7 +125,7 @@ export default async function CampaignsPage({
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-600">Total Campaigns</p>
@@ -151,7 +151,7 @@ export default async function CampaignsPage({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-600">Manual Campaigns</p>
@@ -177,7 +177,7 @@ export default async function CampaignsPage({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-600">Total Raised</p>
@@ -203,7 +203,7 @@ export default async function CampaignsPage({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-600">Total Payments</p>
@@ -235,7 +235,7 @@ export default async function CampaignsPage({
           <h2 className="text-xl font-semibold text-slate-900">
             Manual Campaigns ({manualCampaigns.length})
           </h2>
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
@@ -297,7 +297,7 @@ export default async function CampaignsPage({
           <h2 className="text-xl font-semibold text-slate-900">
             Auto-Generated Campaigns ({autoCampaigns.length})
           </h2>
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
@@ -360,7 +360,7 @@ export default async function CampaignsPage({
       )}
 
       {campaigns.length === 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-xs">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
             <svg
               className="h-8 w-8 text-slate-400"
