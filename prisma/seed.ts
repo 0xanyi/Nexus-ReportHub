@@ -1,7 +1,16 @@
-import { PrismaClient, UserRole } from "@prisma/client"
+import "dotenv/config"
+import { PrismaPg } from "@prisma/adapter-pg"
 import bcrypt from "bcryptjs"
+import { PrismaClient, UserRole } from "../generated/prisma/client"
 
-const prisma = new PrismaClient()
+const connectionString = process.env.DATABASE_URL
+if (!connectionString) {
+  throw new Error("DATABASE_URL is not set")
+}
+
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString, max: 1 }),
+})
 
 async function main() {
   console.log("🌱 Seeding database...")

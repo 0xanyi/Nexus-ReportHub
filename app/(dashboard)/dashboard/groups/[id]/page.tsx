@@ -263,8 +263,8 @@ export default async function GroupDetailPage({
         <Card
           className={`border-none shadow-lg ${
             balance < 0
-              ? "bg-gradient-to-br from-rose-500/15 via-rose-400/10 to-orange-500/15 shadow-rose-500/10"
-              : "bg-gradient-to-br from-emerald-500/15 via-emerald-400/5 to-teal-500/15 shadow-emerald-500/10"
+              ? "bg-linear-to-br from-rose-500/15 via-rose-400/10 to-orange-500/15 shadow-rose-500/10"
+              : "bg-linear-to-br from-emerald-500/15 via-emerald-400/5 to-teal-500/15 shadow-emerald-500/10"
           }`}
         >
           <CardHeader className="space-y-3">
@@ -300,7 +300,7 @@ export default async function GroupDetailPage({
             {Object.entries(productBreakdown).map(([productName, data]) => (
               <div
                 key={productName}
-                className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm"
+                className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-xs"
               >
                 <div className="text-sm font-medium text-slate-900">{productName}</div>
                 <div className="mt-2 flex items-end justify-between">

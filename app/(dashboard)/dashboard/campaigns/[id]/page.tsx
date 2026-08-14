@@ -207,7 +207,7 @@ export default async function CampaignDetailPage({
             <span className="font-semibold">{fyLabel}</span>
           </p>
         </div>
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <Suspense fallback={<div className="h-10 w-32 animate-pulse rounded-md bg-slate-100" />}>
             <FinancialYearSelector />
           </Suspense>
@@ -215,7 +215,7 @@ export default async function CampaignDetailPage({
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-600">Total Raised</p>
@@ -241,7 +241,7 @@ export default async function CampaignDetailPage({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-600">Total Payments</p>
@@ -267,7 +267,7 @@ export default async function CampaignDetailPage({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-600">Avg per Payment</p>
@@ -301,7 +301,7 @@ export default async function CampaignDetailPage({
           <h2 className="text-xl font-semibold text-slate-900">
             Breakdown by Zone
           </h2>
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
@@ -351,7 +351,7 @@ export default async function CampaignDetailPage({
             {campaign.groupBreakdown.map((group) => (
               <div
                 key={group.id}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs"
               >
                 <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
                   <div className="flex items-center justify-between">
@@ -419,7 +419,7 @@ export default async function CampaignDetailPage({
       )}
 
       {campaign.paymentCount === 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-xs">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
             <svg
               className="h-8 w-8 text-slate-400"

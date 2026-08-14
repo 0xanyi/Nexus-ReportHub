@@ -200,7 +200,7 @@ export default function UploadPage() {
                   value={uploadType}
                   onChange={(event) => setUploadType(event.target.value as typeof uploadType)}
                   disabled={isUploading}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <option value="TRANSACTION">Bank Transaction Upload</option>
                   <option value="ORDER">Monthly Order Upload</option>
@@ -215,7 +215,7 @@ export default function UploadPage() {
                     value={orderPeriod}
                     onChange={(event) => setOrderPeriod(event.target.value)}
                     disabled={isUploading}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     placeholder="2025-09"
                   />
                 </div>

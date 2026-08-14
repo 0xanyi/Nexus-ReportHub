@@ -385,7 +385,7 @@ export default async function DashboardPage({
       {/* Key Metrics Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Total Churches */}
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Total Churches</CardTitle>
             <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center">
@@ -401,7 +401,7 @@ export default async function DashboardPage({
         </Card>
 
         {/* Payment Received */}
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Payment Received</CardTitle>
             <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center">
@@ -419,7 +419,7 @@ export default async function DashboardPage({
         </Card>
 
         {/* Remittance Rate */}
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Remittance Rate</CardTitle>
             <div className="h-8 w-8 rounded-full bg-violet-50 flex items-center justify-center">
@@ -435,7 +435,7 @@ export default async function DashboardPage({
         </Card>
 
         {/* Outstanding Balance */}
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Outstanding</CardTitle>
             <div className="h-8 w-8 rounded-full bg-rose-50 flex items-center justify-center">
@@ -456,7 +456,7 @@ export default async function DashboardPage({
       {/* Performance Overview */}
       <div className="grid gap-6 lg:grid-cols-7">
         {/* Top Performers */}
-        <Card className="lg:col-span-4 border-0 shadow-sm">
+        <Card className="lg:col-span-4 border-0 shadow-xs">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Performance Leaders</CardTitle>
             <CardDescription>
@@ -469,7 +469,7 @@ export default async function DashboardPage({
           <CardContent className="space-y-6">
             {/* Top Zone for Super Admin, Top Group for Zonal Admin */}
             {session?.user?.role === 'SUPER_ADMIN' && topPerformingZone && (
-              <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <TrophyIcon className="h-4 w-4 text-blue-600" />
@@ -488,7 +488,7 @@ export default async function DashboardPage({
             )}
 
             {session?.user?.role === 'ZONE_ADMIN' && topPerformingGroup && (
-              <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <TrophyIcon className="h-4 w-4 text-blue-600" />
@@ -508,7 +508,7 @@ export default async function DashboardPage({
 
             {/* Top Church */}
             {topPerformingChurch && (
-              <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-linear-to-r from-emerald-50 to-green-50 border border-emerald-200">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <StarIcon className="h-4 w-4 text-emerald-600" />
@@ -594,7 +594,7 @@ export default async function DashboardPage({
         </Card>
 
         {/* Campaign Activity */}
-        <Card className="lg:col-span-3 border-0 shadow-sm">
+        <Card className="lg:col-span-3 border-0 shadow-xs">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Campaign Activity</CardTitle>
             <CardDescription>Active fundraising initiatives</CardDescription>
@@ -640,7 +640,7 @@ export default async function DashboardPage({
       {/* Recent Activity & Quick Actions */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Activity */}
-        <Card className="lg:col-span-2 border-0 shadow-sm">
+        <Card className="lg:col-span-2 border-0 shadow-xs">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
             <CardDescription>Latest system activities and transactions</CardDescription>
@@ -658,7 +658,7 @@ export default async function DashboardPage({
               ) : (
                 recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                       activity.type === 'upload' ? 'bg-blue-50' :
                       activity.type === 'transaction' ? 'bg-purple-50' :
                       'bg-emerald-50'
@@ -674,7 +674,7 @@ export default async function DashboardPage({
                         <p className="text-xs font-medium text-slate-700">{formatCurrency(activity.amount, 'GBP')}</p>
                       )}
                     </div>
-                    <span className="text-xs text-slate-400 flex-shrink-0">
+                    <span className="text-xs text-slate-400 shrink-0">
                       {formatTimeAgo(activity.timestamp)}
                     </span>
                   </div>
@@ -685,7 +685,7 @@ export default async function DashboardPage({
         </Card>
 
         {/* Quick Actions */}
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-xs">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
             <CardDescription>Common tasks and workflows</CardDescription>
@@ -735,7 +735,7 @@ function QuickAction({ href, label, description, icon: Icon }: QuickActionProps)
       href={href}
       className="flex items-start gap-3 p-3 rounded-lg border border-slate-200/60 hover:bg-slate-50 hover:border-slate-300 transition-all group"
     >
-      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-200 transition-colors">
+      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 group-hover:bg-slate-200 transition-colors">
         <Icon className="h-5 w-5 text-slate-600" />
       </div>
       <div className="flex-1 min-w-0">

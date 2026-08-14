@@ -15,7 +15,16 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
+import type { PieLabelRenderProps } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+
+function formatCurrencyTooltip(value: unknown) {
+  return `£${Number(value ?? 0).toLocaleString()}`
+}
+
+function productPieLabel({ name, percent }: PieLabelRenderProps) {
+  return `${name ?? ""}: ${((percent ?? 0) * 100).toFixed(0)}%`
+}
 
 interface FinancialChartsProps {
   monthlyData: Array<{ month: string; orders: number; payments: number }>
@@ -41,7 +50,7 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip
-                formatter={(value: number) => `£${value.toLocaleString()}`}
+                formatter={formatCurrencyTooltip}
                 contentStyle={{ borderRadius: "8px" }}
               />
               <Legend />
@@ -66,7 +75,7 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={(props: Record<string, unknown>) => `${props.name as string}: ${((props.percent as number) * 100).toFixed(0)}%`}
+                label={productPieLabel}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
@@ -76,7 +85,7 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number) => `£${value.toLocaleString()}`}
+                formatter={formatCurrencyTooltip}
                 contentStyle={{ borderRadius: "8px" }}
               />
             </PieChart>
@@ -97,7 +106,7 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
               <XAxis type="number" />
               <YAxis dataKey="name" type="category" width={100} />
               <Tooltip
-                formatter={(value: number) => `£${value.toLocaleString()}`}
+                formatter={formatCurrencyTooltip}
                 contentStyle={{ borderRadius: "8px" }}
               />
               <Legend />
@@ -120,7 +129,7 @@ export function FinancialCharts({ monthlyData, productData, topChurches }: Finan
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip
-                formatter={(value: number) => `£${value.toLocaleString()}`}
+                formatter={formatCurrencyTooltip}
                 contentStyle={{ borderRadius: "8px" }}
               />
               <Legend />

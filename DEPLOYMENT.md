@@ -31,7 +31,7 @@ Click **"Environment Variables"** and add the following:
 
 | Variable | Value | Where to Get It |
 |----------|-------|-----------------|
-| `DATABASE_URL` | Your PostgreSQL connection string | See Database Setup below |
+| `DATABASE_URL` | Pooled PostgreSQL URL (see Database Setup) | See Database Setup below |
 | `NEXTAUTH_SECRET` | Random 32-character string | Run: `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | `https://your-app.vercel.app` | Will be provided after first deploy |
 
@@ -97,14 +97,14 @@ vercel --prod
    ```
    postgresql://username:password@ep-xxxxx.region.aws.neon.tech/nexus_reporthub?sslmode=require
    ```
-5. Use this as your `DATABASE_URL`
+5. Use the **pooled** connection string as `DATABASE_URL` (Prisma 7 opens a `node-pg` pool; the app caps it at 1 connection per Vercel isolate)
 
 ### Option B: Supabase (Free Tier Available)
 
 1. Go to [supabase.com](https://supabase.com)
 2. Create a new project
 3. Go to Settings → Database
-4. Copy the "Connection string" (Session mode)
+4. Copy the **Transaction pooler** connection string (not Session mode)
 5. Use this as your `DATABASE_URL`
 
 ### Option C: Railway (Free Tier Available)

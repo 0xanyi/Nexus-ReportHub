@@ -52,7 +52,7 @@ A comprehensive church financial and inventory management system for Rhapsody of
 ## Tech Stack
 
 - **Framework**: Next.js 15.5.4 (App Router) with TypeScript
-- **Database**: PostgreSQL with Prisma ORM v6
+- **Database**: PostgreSQL with Prisma ORM v7
 - **Authentication**: NextAuth.js v5
 - **Charts**: Recharts for data visualization
 - **CSV Processing**: Papa Parse

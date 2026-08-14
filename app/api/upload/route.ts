@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { Prisma, UploadType, type PaymentMethod } from "@prisma/client"
+import { Prisma, UploadType, type PaymentMethod } from "@/generated/prisma/client"
 import Papa from "papaparse"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"

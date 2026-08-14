@@ -101,7 +101,7 @@ export default function NewCampaignPage() {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-xs">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -140,7 +140,7 @@ export default function NewCampaignPage() {
               onChange={(e) =>
                 setFormData({ ...formData, departmentId: e.target.value })
               }
-              className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">Select a department...</option>
               {departments.map((dept) => (
@@ -157,7 +157,7 @@ export default function NewCampaignPage() {
           <div className="rounded-xl bg-blue-50 p-4">
             <div className="flex gap-3">
               <svg
-                className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600"
+                className="mt-0.5 h-5 w-5 shrink-0 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

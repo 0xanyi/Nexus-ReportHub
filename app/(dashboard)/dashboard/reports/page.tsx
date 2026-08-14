@@ -257,7 +257,7 @@ export default async function ReportsPage({
           </p>
           <Link
             href="/dashboard/analytics"
-            className="inline-flex w-fit items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex w-fit items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 shadow-xs transition hover:bg-slate-50"
           >
             Jump to Analytics
           </Link>
@@ -268,7 +268,7 @@ export default async function ReportsPage({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <Card className="border-none bg-gradient-to-br from-emerald-500/15 via-emerald-400/5 to-teal-500/15 shadow-lg shadow-emerald-500/10">
+        <Card className="border-none bg-linear-to-br from-emerald-500/15 via-emerald-400/5 to-teal-500/15 shadow-lg shadow-emerald-500/10">
           <CardHeader className="space-y-3">
             <CardTitle className="text-sm font-medium text-emerald-900">
               Active Churches
@@ -307,7 +307,7 @@ export default async function ReportsPage({
             {formatCurrency(stats.totalPayments, "GBP")}
           </CardContent>
         </Card>
-        <Card className="border-none bg-gradient-to-br from-blue-500/15 via-indigo-400/10 to-purple-500/15 shadow-lg shadow-blue-500/10">
+        <Card className="border-none bg-linear-to-br from-blue-500/15 via-indigo-400/10 to-purple-500/15 shadow-lg shadow-blue-500/10">
           <CardHeader className="space-y-3">
             <CardTitle className="text-sm font-medium text-blue-900">
               Total Campaigns
@@ -320,7 +320,7 @@ export default async function ReportsPage({
             {formatCurrency(totalCampaigns, "GBP")}
           </CardContent>
         </Card>
-        <Card className="border-none bg-gradient-to-br from-rose-500/15 via-rose-400/10 to-orange-500/15 shadow-lg shadow-rose-500/10">
+        <Card className="border-none bg-linear-to-br from-rose-500/15 via-rose-400/10 to-orange-500/15 shadow-lg shadow-rose-500/10">
           <CardHeader className="space-y-3">
             <CardTitle className="text-sm font-medium text-rose-900">
               Outstanding Balance
@@ -406,7 +406,7 @@ export default async function ReportsPage({
             {recentTransactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="flex flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 shadow-sm shadow-slate-900/5 transition hover:border-slate-300"
+                className="flex flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 shadow-xs shadow-slate-900/5 transition hover:border-slate-300"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="font-medium text-slate-800">{transaction.church.name}</div>
